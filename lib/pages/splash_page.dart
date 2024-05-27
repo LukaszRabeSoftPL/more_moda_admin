@@ -8,8 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SplashPage extends StatelessWidget {
   Future<void> _redirect(BuildContext context) async {
     // Zasymulowany opóźniony czas ładowania, aby zobaczyć CircularProgressIndicator
-    await Future.delayed(const Duration(seconds: 2));
-    final session = Supabase.instance.client.auth.currentSession;
+    // await Future.delayed(const Duration(seconds: 2));
+    final session = await Supabase.instance.client.auth.currentSession;
     if (session != null) {
       //go to homepage
       Get.off(() => HomePage());

@@ -11,9 +11,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
+  TextEditingController _emailController = TextEditingController();
 
-  final TextEditingController _passwordController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
 
   double displayHeight(BuildContext context) {
     return displaySize(context).height;
@@ -55,13 +55,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 Image.asset('assets/images/$logo', width: 200, height: 200),
                 SizedBox(height: 50),
                 TextField(
-                  key: Key('email-field'),
+                  // key: Key('email-field'),
                   controller: _emailController,
                   decoration: textFieldDecoration.copyWith(labelText: 'Email'),
                 ),
                 SizedBox(height: 20),
                 TextField(
-                  key: Key('password-field'),
+                  // key: Key('password-field'),
                   controller: _passwordController,
                   obscureText: true,
                   decoration:
