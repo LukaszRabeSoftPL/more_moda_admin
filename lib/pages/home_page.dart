@@ -1,76 +1,69 @@
-import 'package:architect_schwarz_admin/pages/article_page.dart';
-import 'package:architect_schwarz_admin/widgets/tiles_menu.dart';
-
+import 'package:architect_schwarz_admin/pages/categories_page.dart';
+import 'package:architect_schwarz_admin/pages/companies_page.dart';
+import 'package:architect_schwarz_admin/pages/login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'categories_page.dart';
-
-import 'companies_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0; // Indeks wybranej pozycji
-  final List<Widget> _pages = const [
-    CategoriesPage(),
-    ArticlesPage(),
-    CompaniesPage(),
-  ];
-
-  void _navigateTo(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  final PageController pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //appBar: AppBar(title: Text('Admin Panel')),
       body: Row(
         children: [
           Container(
-            width: 200, // Szerokość menu
-            color: Colors.grey[200], // Tło menu
+            width: 200, // szerokość bocznego menu
+            color: Colors.grey[200], // kolor tła menu
             child: ListView(
-              children: [
-                MenuItem(
-                  title: 'Categories',
-                  selected: _selectedIndex == 0,
-                  onTap: () => _navigateTo(0),
+              children: <Widget>[
+                ListTile(
+                  title: Text('Kategorie'),
+                  onTap: () {
+                    pageController.jumpToPage(0);
+                  },
                 ),
-                MenuItem(
-                  title: 'Articles',
-                  selected: _selectedIndex == 1,
-                  onTap: () => _navigateTo(1),
-                ),
-                MenuItem(
-                  title: 'Companies',
-                  selected: _selectedIndex == 2,
-                  onTap: () => _navigateTo(2),
+                ListTile(
+                  title: Text('Subkategorie'),
+                  onTap: () {
+                    pageController.jumpToPage(1);
+                  },
                 ),
                 Divider(),
-                MenuItem(
-                  title: 'Logout',
-                  selected: false,
+                ListTile(
+                  title: Text('Wyloguj'),
                   onTap: () async {
                     await Supabase.instance.client.auth.signOut();
-                    Navigator.of(context).pushReplacementNamed('/loginPage');
+                    Get.offAll(() => LoginScreen());
                   },
                 ),
               ],
             ),
           ),
           Expanded(
-            child: _pages[
-                _selectedIndex], // Zawartość zmienia się w zależności od wyboru w menu
-          ),
+            child: PageView(
+              controller: pageController,
+              children: [
+                CategoriesPage(),
+                CompaniesPage(),
+              ],
+            ),
+          )
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await Supabase.instance.client.auth.signOut();
+          Get.offAll(() => LoginScreen());
+        },
+        child: Icon(Icons.exit_to_app),
+        tooltip: 'Logout',
       ),
     );
   }

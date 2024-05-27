@@ -1,36 +1,33 @@
 import 'package:architect_schwarz_admin/main.dart';
+import 'package:architect_schwarz_admin/pages/home_page.dart';
+import 'package:architect_schwarz_admin/pages/login_page.dart';
 import 'package:flutter/material.dart';
-
+import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
-
-  @override
-  State<SplashPage> createState() => _SplashPageState();
-}
-
-class _SplashPageState extends State<SplashPage> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _redirect();
-  }
-
-  Future<void> _redirect() async {
-    await Future.delayed(const Duration(seconds: 1));
-    final session = supabase.auth.currentSession;
-    if (!mounted) return;
+class SplashPage extends StatelessWidget {
+  Future<void> _redirect(BuildContext context) async {
+    // Zasymulowany opóźniony czas ładowania, aby zobaczyć CircularProgressIndicator
+    await Future.delayed(const Duration(seconds: 2));
+    final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
-      Navigator.of(context).pushReplacementNamed('/homePage');
+      //go to homepage
+      Get.off(() => HomePage());
     } else {
-      Navigator.of(context).pushReplacementNamed('/loginPage');
+      Get.off(() => LoginScreen());
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _redirect(context);
+    // WidgetsBinding.instance.addPostFrameCallback(
+    //   (_) {
+    //     _redirect(context);
+    //   },
+    // )
+    ;
+
     return Scaffold(
       body: Center(
         child: Column(
