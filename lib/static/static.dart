@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 String logo = 'logo.jpg';
 String background = 'background_image.jpg';
-
+Color popuptitleColor = Color(0xFF3E84BE);
 String font = 'Roboto';
 
 const textFieldDecoration = InputDecoration(

@@ -1,6 +1,7 @@
-import 'package:architect_schwarz_admin/pages/categories_page.dart';
-import 'package:architect_schwarz_admin/pages/companies_page.dart';
-import 'package:architect_schwarz_admin/pages/login_page.dart';
+import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
+import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
+import 'package:architect_schwarz_admin/views/pages/companies_page.dart';
+import 'package:architect_schwarz_admin/views/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -59,8 +60,30 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await Supabase.instance.client.auth.signOut();
-          Get.offAll(() => LoginScreen());
+          showDialog(
+            context: context,
+            builder: (context) {
+              return SimpleDialog(
+                title: Text('Add new category'),
+                children: [
+                  TextFormField(
+                    onFieldSubmitted: (value) {
+                      createMainCategories(value);
+                      if (value.isNotEmpty) {
+                        Navigator.pop(context);
+                      } else {
+                        Navigator.pop(context);
+                      }
+
+                      ;
+                    },
+                  )
+                ],
+              );
+            },
+          );
+          // await Supabase.instance.client.auth.signOut();
+          // Get.offAll(() => LoginScreen());
         },
         child: Icon(Icons.exit_to_app),
         tooltip: 'Logout',

@@ -1,9 +1,11 @@
 import 'package:architect_schwarz_admin/main.dart';
-import 'package:architect_schwarz_admin/pages/home_page.dart';
+import 'package:architect_schwarz_admin/views/pages/home_page.dart';
 import 'package:architect_schwarz_admin/static/sizes_helpers.dart';
 import 'package:architect_schwarz_admin/static/static.dart';
+import 'package:architect_schwarz_admin/views/widgets/main_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,7 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController _emailController = TextEditingController();
 
   TextEditingController _passwordController = TextEditingController();
-
+  SupabaseClient client = Supabase.instance.client;
   double displayHeight(BuildContext context) {
     return displaySize(context).height;
   }
@@ -71,8 +73,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   width: 200,
                   height: 50,
-                  child: ElevatedButton(
-                    style: buttonStyle1,
+                  child: MainButton(
+                    text: 'Login',
                     onPressed: () async {
                       try {
                         final email = _emailController.text.trim();
@@ -89,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return;
                         }
 
-                        final response = await supabase.auth.signInWithPassword(
+                        final response = await client.auth.signInWithPassword(
                             email: email, password: password);
 
                         if (response.user != null) {
@@ -118,9 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       }
                     },
-                    child: Text('Login'),
                   ),
                 ),
+                // Align(
+                //     alignment: AlignmentDirectional.bottomEnd,
+                //     child: Text('1.0')),
               ],
             ),
           ),

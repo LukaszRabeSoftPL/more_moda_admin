@@ -5,10 +5,10 @@ packages:
     dependency: transitive
     description:
       name: app_links
-      sha256: "8c6ef5ba9e26b720d4c9073826befb87df2ab5e7a81c22b6c3145080b5e736c9"
+      sha256: "96e677810b83707ff5e10fac11e4839daa0ea4e0123c35864c092699165eb3db"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.2"
+    version: "6.1.1"
   async:
     dependency: transitive
     description:
@@ -94,6 +94,22 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_dot:
+    dependency: "direct main"
+    description:
+      name: flutter_dot
+      sha256: "15c8e14bc2e67cab44c1ebe308f23d72fd3d7449c83a54e39a3710bc63385b79"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.0"
+  flutter_dotenv:
+    dependency: "direct main"
+    description:
+      name: flutter_dotenv
+      sha256: "9357883bdd153ab78cbf9ffa07656e336b8bbb2b5a3ca596b0b27e119f7c7d77"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -112,6 +128,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  form_field_validator:
+    dependency: "direct main"
+    description:
+      name: form_field_validator
+      sha256: c1fc6c89b5525288c02fe989a88c6f30bb6072da4f9dded17a04cf68c4abfb87
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   functions_client:
     dependency: transitive
     description:
@@ -128,14 +152,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.6.6"
+  get_storage:
+    dependency: "direct main"
+    description:
+      name: get_storage
+      sha256: "39db1fffe779d0c22b3a744376e86febe4ade43bf65e06eab5af707dc84185a2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.1"
   go_router:
     dependency: "direct main"
     description:
       name: go_router
-      sha256: "7685acd06244ba4be60f455c5cafe5790c63dc91fc03f7385b1e922a6b85b17c"
+      sha256: abec47eb8c8c36ebf41d0a4c64dbbe7f956e39a012b3aafc530e951bdc12fe3f
       url: "https://pub.dev"
     source: hosted
-    version: "14.1.1"
+    version: "14.1.4"
   google_fonts:
     dependency: "direct main"
     description:
@@ -192,6 +224,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.19.0"
   jwt_decode:
     dependency: transitive
     description:
@@ -332,10 +372,10 @@ packages:
     dependency: transitive
     description:
       name: realtime_client
-      sha256: "492a1ab568b3812cb345aad8dd09b3936877edba81a6ab6f5fdf365c155797e1"
+      sha256: cd44fa21407a2e217d674f1c1a33b36c49ad0d8aea0349bf5b66594db06c80fb
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.4"
+    version: "2.1.0"
   retry:
     dependency: transitive
     description:
@@ -433,10 +473,10 @@ packages:
     dependency: transitive
     description:
       name: storage_client
-      sha256: bf5589d5de61a2451edb1b8960a0e673d4bb5c42ecc4dddf7c051a93789ced34
+      sha256: e37f1b9d40f43078d12bd2d1b6b08c2c16fbdbafc58b57bc44922da6ea3f5625
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.1"
+    version: "2.0.2"
   stream_channel:
     dependency: transitive
     description:
@@ -457,18 +497,18 @@ packages:
     dependency: transitive
     description:
       name: supabase
-      sha256: cd3d6bcc6b15ffd6eacea92ec2a2d9f09bf72c8a95c09a14f3b523ae9ee99cb6
+      sha256: "4555658031af0a8b38c7375f28e4b35312291f4aab0ca504dd76661381ce134f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.3"
+    version: "2.2.0"
   supabase_flutter:
     dependency: "direct main"
     description:
       name: supabase_flutter
-      sha256: "7f552ddddb2f1ac2925dc70af655b39bb64f8d3c1ca6dda58685d1fb4eec447c"
+      sha256: "1d6fb4ffaf50fc6f60507ab8ebf0b7dedbe6fabfbd8066db6f2a6552ddd0ea8c"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.3"
+    version: "2.5.4"
   term_glyph:
     dependency: transitive
     description:
@@ -505,10 +545,10 @@ packages:
     dependency: transitive
     description:
       name: url_launcher_android
-      sha256: "360a6ed2027f18b73c8d98e159dda67a61b7f2e0f6ec26e86c3ada33b0621775"
+      sha256: "17cd5e205ea615e2c6ea7a77323a11712dffa0720a8a90540db57a01347f9ad9"
       url: "https://pub.dev"
     source: hosted
-    version: "6.3.1"
+    version: "6.3.2"
   url_launcher_ios:
     dependency: transitive
     description:
