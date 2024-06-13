@@ -42,6 +42,8 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
   Future<void> _uploadImages() async {
     final String? userToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
+    final String apiKey =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpenN3YndxZmlncnVheWJsamJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQ5OTg5ODksImV4cCI6MjAzMDU3NDk4OX0.BEzd2rPR2r9_eM2g1_7H-cfb-HebHZ2IlKjo6IvQRmM';
 
     if (userToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -57,22 +59,47 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
       final Uri uri = Uri.parse(
           'https://sizswbwqfigruaybljbk.supabase.co/storage/v1/object/${bucketName}/${fileName}');
 
-      final http.Response response = await http.post(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $userToken',
-          'apikey':
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpenN3YndxZmlncnVheWJsamJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQ5OTg5ODksImV4cCI6MjAzMDU3NDk4OX0.BEzd2rPR2r9_eM2g1_7H-cfb-HebHZ2IlKjo6IvQRmM',
-          'Content-Type': 'application/octet-stream',
-        },
-        body: fileBytes,
-      );
-
-      if (response.statusCode != 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: ${response.body}')),
+      try {
+        final http.Response response = await http.post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $userToken',
+            'apikey': apiKey,
+            'Content-Type': 'application/octet-stream',
+          },
+          body: fileBytes,
         );
-        return;
+
+        if (response.statusCode == 200) {
+          // Pobierz URL dodanego zdjęcia
+          final String imageUrl =
+              'https://sizswbwqfigruaybljbk.supabase.co/storage/v1/object/public/${bucketName}/${fileName}';
+
+          // Zapisz URL w tabeli articles_images
+          final insertResponse =
+              await _supabaseClient.from('articles_images').insert({
+            'image_url': imageUrl,
+            'gallery_id': 1,
+          });
+
+          if (insertResponse.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(
+                      'Failed to save image URL: ${insertResponse.error!.message}')),
+            );
+            return;
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Upload failed: ${response.body}')),
+          );
+          return;
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
 
