@@ -44,6 +44,9 @@ dependencies:
   form_field_validator: ^1.1.0
   flutter_dot: ^0.0.0
   flutter_dotenv: ^5.1.0
+  image_picker: ^1.0.8
+  rich_text_controller: ^1.4.2
+  html_editor_enhanced: ^2.5.1
   
 
 dev_dependencies:

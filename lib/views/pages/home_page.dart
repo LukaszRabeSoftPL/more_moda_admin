@@ -1,7 +1,13 @@
+import 'package:architect_schwarz_admin/controllers/articles_a_z_controller.dart';
 import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
+import 'package:architect_schwarz_admin/main.dart';
+import 'package:architect_schwarz_admin/views/pages/article_az_list_page.dart';
+
 import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
 import 'package:architect_schwarz_admin/views/pages/companies_page.dart';
+import 'package:architect_schwarz_admin/views/pages/gallery/gallery_list_page.dart';
 import 'package:architect_schwarz_admin/views/pages/login_page.dart';
+import 'package:architect_schwarz_admin/views/pages/subcategories_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -36,6 +42,18 @@ class _HomePageState extends State<HomePage> {
                     pageController.jumpToPage(1);
                   },
                 ),
+                ListTile(
+                  title: Text('Articles_A_Z'),
+                  onTap: () {
+                    pageController.jumpToPage(2);
+                  },
+                ),
+                ListTile(
+                  title: Text('Galerie'),
+                  onTap: () {
+                    pageController.jumpToPage(3);
+                  },
+                ),
                 Divider(),
                 ListTile(
                   title: Text('Wyloguj'),
@@ -50,9 +68,13 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: PageView(
               controller: pageController,
-              children: [
+              children: const [
                 CategoriesPage(),
-                CompaniesPage(),
+                SubCategoriesPage(),
+                Article_AZ_ListPage(),
+                GalerryListPage(),
+
+                //CompaniesPage(),
               ],
             ),
           )

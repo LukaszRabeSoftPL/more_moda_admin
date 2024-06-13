@@ -77,6 +77,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   itemBuilder: (context, index) {
                     final category = data[index];
                     return ListTile(
+                      leading: Text((index + 1).toString()),
                       title: Text(category['name']),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -84,7 +85,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           // Text(data[index].toString(),
                           //     style: const TextStyle(color: Colors.red)),
 
-                          //! edit main category
                           // IconButton(
                           //   icon: const Icon(Icons.edit),
                           //   onPressed: () => {
