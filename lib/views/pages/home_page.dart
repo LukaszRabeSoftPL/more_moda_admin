@@ -5,6 +5,7 @@ import 'package:architect_schwarz_admin/views/pages/article_az_list_page.dart';
 
 import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
 import 'package:architect_schwarz_admin/views/pages/companies_page.dart';
+import 'package:architect_schwarz_admin/views/pages/gallery/add_galery_2.dart';
 import 'package:architect_schwarz_admin/views/pages/gallery/gallery_list_page.dart';
 import 'package:architect_schwarz_admin/views/pages/login_page.dart';
 import 'package:architect_schwarz_admin/views/pages/subcategories_page.dart';
@@ -73,6 +74,7 @@ class _HomePageState extends State<HomePage> {
                 SubCategoriesPage(),
                 Article_AZ_ListPage(),
                 GalerryListPage(),
+                AddGalery2(),
 
                 //CompaniesPage(),
               ],

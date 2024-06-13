@@ -47,6 +47,7 @@ dependencies:
   image_picker: ^1.0.8
   rich_text_controller: ^1.4.2
   html_editor_enhanced: ^2.5.1
+  http: ^1.2.0
   
 
 dev_dependencies:
@@ -73,6 +74,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/images/logo.jpg
     - assets/images/
     - .env
 

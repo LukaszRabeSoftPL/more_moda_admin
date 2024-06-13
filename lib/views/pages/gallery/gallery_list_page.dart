@@ -38,7 +38,7 @@ class _GalerryListPageState extends State<GalerryListPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AddGalleryPage(),
+                  builder: (context) => AddPhotoPage(),
                 ),
               );
             },
