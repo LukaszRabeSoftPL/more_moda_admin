@@ -13,6 +13,10 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
   List<Uint8List> _images = [];
   List<String> _imageNames = [];
+  List<Uint8List> _sketches = [];
+  List<String> _sketchNames = [];
+  TextEditingController _galleryNameController = TextEditingController();
+  int? _galleryId;
 
   Future<void> _pickImage() async {
     if (_images.length >= 6) {
@@ -39,7 +43,57 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
     }
   }
 
+  Future<void> _pickSketch() async {
+    if (_sketches.length >= 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You can only upload up to 6 sketches.')),
+      );
+      return;
+    }
+
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+    );
+
+    if (result != null) {
+      setState(() {
+        for (var file in result.files) {
+          if (_sketches.length < 6) {
+            _sketches.add(file.bytes!);
+            _sketchNames.add(file.name);
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> _createGallery() async {
+    try {
+      final response = await _supabaseClient
+          .from('galerries')
+          .insert({'name': _galleryNameController.text})
+          .select()
+          .single();
+
+      setState(() {
+        _galleryId = response['id'];
+      });
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create gallery: $error')),
+      );
+    }
+  }
+
   Future<void> _uploadImages() async {
+    if (_galleryId == null) {
+      await _createGallery();
+      if (_galleryId == null) {
+        return; // Stop if the gallery was not created successfully.
+      }
+    }
+
     final String? userToken =
         Supabase.instance.client.auth.currentSession?.accessToken;
     final String apiKey =
@@ -55,7 +109,7 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
     for (int i = 0; i < _images.length; i++) {
       final String fileName = _imageNames[i];
       final Uint8List fileBytes = _images[i];
-      final String bucketName = 'images/article_images';
+      final String bucketName = 'images/articles_images';
       final Uri uri = Uri.parse(
           'https://sizswbwqfigruaybljbk.supabase.co/storage/v1/object/${bucketName}/${fileName}');
 
@@ -71,15 +125,13 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
         );
 
         if (response.statusCode == 200) {
-          // Pobierz URL dodanego zdjęcia
           final String imageUrl =
               'https://sizswbwqfigruaybljbk.supabase.co/storage/v1/object/public/${bucketName}/${fileName}';
 
-          // Zapisz URL w tabeli articles_images
           final insertResponse =
               await _supabaseClient.from('articles_images').insert({
             'image_url': imageUrl,
-            'gallery_id': 1,
+            'gallery_id': _galleryId,
           });
 
           if (insertResponse.error != null) {
@@ -98,7 +150,56 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('upload image: $fileName')),
+        );
+      }
+    }
+
+    for (int i = 0; i < _sketches.length; i++) {
+      final String fileName = _sketchNames[i];
+      final Uint8List fileBytes = _sketches[i];
+      final String bucketName = 'images/sketches_images';
+      final Uri uri = Uri.parse(
+          'https://sizswbwqfigruaybljbk.supabase.co/storage/v1/object/${bucketName}/${fileName}');
+
+      try {
+        final http.Response response = await http.post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $userToken',
+            'apikey': apiKey,
+            'Content-Type': 'application/octet-stream',
+          },
+          body: fileBytes,
+        );
+
+        if (response.statusCode == 200) {
+          final String imageUrl =
+              'https://sizswbwqfigruaybljbk.supabase.co/storage/v1/object/public/${bucketName}/${fileName}';
+
+          final insertResponse =
+              await _supabaseClient.from('sketches_images').insert({
+            'image_url': imageUrl,
+            'gallery_id': _galleryId,
+          });
+
+          if (insertResponse.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(
+                      'Failed to save sketch URL: ${insertResponse.error!.message}')),
+            );
+            return;
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Upload failed: ${response.body}')),
+          );
+          return;
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('upload image: $fileName')),
         );
       }
     }
@@ -110,7 +211,12 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
     setState(() {
       _images.clear();
       _imageNames.clear();
+      _sketches.clear();
+      _sketchNames.clear();
     });
+
+    Navigator.pop(
+        context, true); // Return to the previous screen and indicate success
   }
 
   @override
@@ -123,6 +229,11 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            TextField(
+              controller: _galleryNameController,
+              decoration: InputDecoration(labelText: 'Gallery Name'),
+            ),
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: _pickImage,
               child: Text('Pick Images'),
@@ -156,10 +267,46 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
                       );
                     }).toList(),
                   ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _pickSketch,
+              child: Text('Pick Sketches'),
+            ),
+            SizedBox(height: 20),
+            _sketches.isEmpty
+                ? Text('No sketches selected.')
+                : Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: _sketches.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      Uint8List sketch = entry.value;
+                      return Stack(
+                        children: [
+                          Image.memory(sketch,
+                              width: 100, height: 100, fit: BoxFit.cover),
+                          Positioned(
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _sketches.removeAt(index);
+                                  _sketchNames.removeAt(index);
+                                });
+                              },
+                              child: Icon(Icons.close, color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
             Spacer(),
             ElevatedButton(
-              onPressed: _images.isNotEmpty ? _uploadImages : null,
-              child: Text('Upload Images'),
+              onPressed: _images.isNotEmpty || _sketches.isNotEmpty
+                  ? _uploadImages
+                  : null,
+              child: Text('Upload Images and Sketches'),
             ),
           ],
         ),
