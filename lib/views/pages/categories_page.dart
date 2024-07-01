@@ -1,5 +1,6 @@
 import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
 import 'package:architect_schwarz_admin/main.dart';
+import 'package:architect_schwarz_admin/static/static.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:architect_schwarz_admin/views/widgets/main_button.dart';
 import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';
@@ -43,18 +44,19 @@ class _CategoriesPageState extends State<CategoriesPage> {
         Row(
           children: [
             Padding(
-                padding: const EdgeInsets.only(top: 20, left: 10),
-                child: customButton(
-                  text: 'add category',
-                  onPressed: () async {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return addMainCategoryCustomDialog();
-                      },
-                    );
-                  },
-                )),
+              padding: const EdgeInsets.only(top: 8, left: 8),
+              child: customButton(
+                text: 'Kategorie hinzufügen',
+                onPressed: () async {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AddMainCategoryCustomDialog();
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
         SizedBox(
@@ -62,7 +64,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
         ),
         Divider(
           thickness: 1,
-          color: Colors.grey,
+          color: Color(0xFF6A93C3).withOpacity(0.5),
         ),
         StreamBuilder(
           stream: mainCategoriesStream,
@@ -76,71 +78,79 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   itemCount: data.length,
                   itemBuilder: (context, index) {
                     final category = data[index];
-                    return ListTile(
-                      leading: Text((index + 1).toString()),
-                      title: Text(category['name']),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Text(data[index].toString(),
-                          //     style: const TextStyle(color: Colors.red)),
+                    return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0),
+                      ),
+                      color: cardColor,
+                      child: ListTile(
+                        leading: Text((index + 1).toString()),
+                        title: Text(
+                          category['name'],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Text(data[index].toString(),
+                            //     style: const TextStyle(color: Colors.red)),
 
-                          // IconButton(
-                          //   icon: const Icon(Icons.edit),
-                          //   onPressed: () => {
-                          //     showDialog(
-                          //       context: context,
-                          //       builder: (context) {
-                          //         return SimpleDialog(
-                          //           title: Text('Edit name of category'),
-                          //           children: [
-                          //             TextFormField(
-                          //               initialValue: category['name'],
-                          //               onFieldSubmitted: (value) async {
-                          //                 await updateMainCategories(
-                          //                     category, value);
-                          //                 if (mounted) {
-                          //                   Navigator.pop(context);
-                          //                 }
-                          //               },
-                          //             )
-                          //           ],
-                          //         );
-                          //       },
-                          //     )
-                          //   }, // logika edycji kategorii
-                          // ),
-                          IconButton(
-                              icon: const Icon(Icons.delete),
-                              color: Colors.red,
-                              onPressed: () async {
-                                bool deleteConfirmed = await showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: const Text('Delete category'),
-                                      actions: [
-                                        TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, false);
-                                            },
-                                            child: Text('No')),
-                                        TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, true);
-                                            },
-                                            child: Text('Yes')),
-                                      ],
-                                      content: Text(
-                                          'Are you sure you want to delete ${category['name']}?'),
-                                    );
-                                  },
-                                );
-                                if (deleteConfirmed) {
-                                  await deleteMainCategories(category);
-                                }
-                              }),
-                        ],
+                            // IconButton(
+                            //   icon: const Icon(Icons.edit),
+                            //   onPressed: () => {
+                            //     showDialog(
+                            //       context: context,
+                            //       builder: (context) {
+                            //         return SimpleDialog(
+                            //           title: Text('Edit name of category'),
+                            //           children: [
+                            //             TextFormField(
+                            //               initialValue: category['name'],
+                            //               onFieldSubmitted: (value) async {
+                            //                 await updateMainCategories(
+                            //                     category, value);
+                            //                 if (mounted) {
+                            //                   Navigator.pop(context);
+                            //                 }
+                            //               },
+                            //             )
+                            //           ],
+                            //         );
+                            //       },
+                            //     )
+                            //   }, // logika edycji kategorii
+                            // ),
+                            IconButton(
+                                icon: const Icon(Icons.delete),
+                                color: unactiveColor,
+                                onPressed: () async {
+                                  // bool deleteConfirmed = await showDialog(
+                                  //   context: context,
+                                  //   builder: (context) {
+                                  //     return AlertDialog(
+                                  //       title: const Text('Delete category'),
+                                  //       actions: [
+                                  //         TextButton(
+                                  //             onPressed: () {
+                                  //               Navigator.pop(context, false);
+                                  //             },
+                                  //             child: Text('No')),
+                                  //         TextButton(
+                                  //             onPressed: () {
+                                  //               Navigator.pop(context, true);
+                                  //             },
+                                  //             child: Text('Yes')),
+                                  //       ],
+                                  //       content: Text(
+                                  //           'Are you sure you want to delete ${category['name']}?'),
+                                  //     );
+                                  //   },
+                                  // );
+                                  // if (deleteConfirmed) {
+                                  //   await deleteMainCategories(category);
+                                  // }
+                                }),
+                          ],
+                        ),
                       ),
                     );
                   },

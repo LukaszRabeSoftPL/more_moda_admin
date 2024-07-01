@@ -6,8 +6,13 @@ import 'package:flutter/material.dart';
 
 String logo = 'logo.jpg';
 String background = 'background_image.jpg';
-Color popuptitleColor = Color(0xFF3E84BE);
+Color popuptitleColor = Color(0xFF6A93C3);
 String font = 'Roboto';
+
+Color cardColor = Color(0xFFF7FAFC);
+Color unactiveColor = Color(0xFFBABFC3);
+Color buttonColor = Color(0xFF6A93C3);
+Color buttonColor2 = Color(0xFF6A93C3);
 
 const textFieldDecoration = InputDecoration(
   border: OutlineInputBorder(

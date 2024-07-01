@@ -1,4 +1,5 @@
 import 'package:architect_schwarz_admin/routes/app_routes.dart';
+import 'package:architect_schwarz_admin/static/static.dart';
 import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
 import 'package:architect_schwarz_admin/views/pages/home_page.dart';
 import 'package:architect_schwarz_admin/views/pages/login_page.dart';
@@ -40,6 +41,47 @@ class MyApp extends StatelessWidget {
         : RoutesClass.getLoginPageRoute();
 
     return GetMaterialApp(
+      theme: ThemeData(
+        inputDecorationTheme: InputDecorationTheme(
+          floatingLabelStyle: TextStyle(
+            //kolor etykiety
+            color: Colors.black,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: buttonColor),
+          ),
+        ),
+        // Styl dla TextField
+        textTheme: TextTheme(
+          bodyText2: TextStyle(color: Colors.black), // Kolor czcionki
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            primary: buttonColor, // Kolor tła przycisku
+            onPrimary: Colors.white, // Kolor tekstu przycisku
+          ),
+        ),
+        dialogTheme: DialogTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            primary: Colors.white, // Kolor tekstu
+            backgroundColor: buttonColor2, // Kolor tła
+          ),
+        ),
+      ),
       title: appName,
       initialRoute: initialRoute, //cek login current user,
       getPages: RoutesClass.routes,
@@ -108,7 +150,7 @@ class MyApp extends StatelessWidget {
 //         // GetPage(name: '/splashpage', page: () => SplashPage()),
 //         GetPage(name: '/loginpage', page: () => LoginScreen()),
 //         GetPage(name: '/homepage', page: () => HomePage()),
-//         GetPage(name: '/categoryPage', page: () => CategoriesPage())
+//         GetPage(name: '/categoryPage', page: () => CategoriesPage()) 
 //       ],
 //       title: 'Flutter Admin Panel22',
 //       theme: lightMode,

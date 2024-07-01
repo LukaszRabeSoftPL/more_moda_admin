@@ -35,13 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 400,
             height: double.maxFinite,
             decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(
-                  color: Colors.blue.shade300,
-                  width: 1,
-                ),
-              ),
-              color: Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.grey.withOpacity(0.5),
@@ -50,16 +43,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   offset: Offset(0, 3),
                 ),
               ],
+              border: Border(
+                right: BorderSide(
+                  color: Colors.blue.shade300,
+                  width: 1,
+                ),
+              ),
+              color: Colors.white,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Image.asset('assets/images/$logo', width: 200, height: 200),
+                SizedBox(height: 20),
+                Text(
+                  'Willkommen zurück',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text('admin panel', style: TextStyle(fontSize: 16)),
                 SizedBox(height: 50),
                 TextField(
                   // key: Key('email-field'),
                   controller: _emailController,
-                  decoration: textFieldDecoration.copyWith(labelText: 'Email'),
+                  decoration: textFieldDecoration.copyWith(labelText: 'E-mail'),
                 ),
                 SizedBox(height: 20),
                 TextField(
@@ -67,14 +77,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _passwordController,
                   obscureText: true,
                   decoration:
-                      textFieldDecoration.copyWith(labelText: 'Password'),
+                      textFieldDecoration.copyWith(labelText: 'Passwort'),
                 ),
                 SizedBox(height: 20),
                 Container(
                   width: 200,
                   height: 50,
                   child: MainButton(
-                    text: 'Login',
+                    text: 'Anmeldung',
                     onPressed: () async {
                       try {
                         final email = _emailController.text.trim();
@@ -83,8 +93,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (email.isEmpty || password.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content:
-                                  Text('Email and password cannot be empty.'),
+                              content: Text(
+                                  'E-Mail und Passwort dürfen nicht leer sein.'),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -97,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (response.user != null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Login Success'),
+                              content: Text('Einloggen erfolgreich'),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -105,7 +115,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Login failed, please try again.1'),
+                              content: Text(
+                                  'Einloggen fehlgeschlagen. Bitte versuchen Sie es erneut.'),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -113,8 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       } catch (error) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content:
-                                Text('An error occurred: ${error.toString()}'),
+                            content: Text(
+                                'Ein Fehler ist aufgetreten: ${error.toString()}'),
                             backgroundColor: Colors.red,
                           ),
                         );

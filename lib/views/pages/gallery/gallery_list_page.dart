@@ -1,4 +1,6 @@
+import 'package:architect_schwarz_admin/static/static.dart';
 import 'package:architect_schwarz_admin/views/pages/gallery/gallery_photo_page.dart';
+import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'add_gallery_page.dart';
@@ -50,21 +52,33 @@ class _GalerryListPageState extends State<GalerryListPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Delete Gallery'),
+          title: Text('Galerie löschen'),
           content:
-              Text('Are you sure you want to delete the gallery $galleryName?'),
+              Text('Möchten Sie die Galerie wirklich löschen: $galleryName?'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: Text('NO'),
+              child: Text('NEIN'),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              child: Text('YES'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Container(
+                width: 50,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.delete_forever_sharp,
+                        color: Colors.white, size: 20),
+                    SizedBox(
+                        width:
+                            5), // Add some space between the icon and the text
+                    const Text('JA'),
+                  ],
+                ),
+              ),
+              style: TextButton.styleFrom(backgroundColor: Colors.red),
             ),
           ],
         );
@@ -105,123 +119,156 @@ class _GalerryListPageState extends State<GalerryListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Gallery List'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddPhotoPage(),
-                ),
-              );
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: customButton(
+              text: 'Galerie hinzufügen',
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddPhotoPage(),
+                  ),
+                );
 
-              if (result == true) {
-                _loadGalerries();
-              }
-            },
+                if (result == true) {
+                  _loadGalerries();
+                }
+              },
+            ),
           ),
-        ],
-      ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _streamController.stream,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final allArticlesAZ = snapshot.data!;
-          final filteredArticlesAZ = allArticlesAZ.where((article) {
-            final articleName = article['title'] ?? '';
-            final categoryId = article['main_category_id'];
-            final matchesSearchQuery =
-                articleName.toLowerCase().contains(searchQuery.toLowerCase());
-            final matchesCategory =
-                selectedCategory == null || categoryId == selectedCategory;
-            return matchesSearchQuery && matchesCategory;
-          }).toList();
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                labelText: 'Suchen',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _streamController.stream,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final allGalleries = snapshot.data!;
+                final filteredGalleries = allGalleries.where((gallery) {
+                  final galleryName = gallery['name'] ?? '';
+                  return galleryName
+                      .toLowerCase()
+                      .contains(searchQuery.toLowerCase());
+                }).toList();
 
-          return ListView.builder(
-            itemCount: filteredArticlesAZ.length,
-            itemBuilder: (context, index) {
-              final articleAZ = filteredArticlesAZ[index];
-              final galeryName = articleAZ['name'] ?? '';
-              final articleAZId = articleAZ['id'];
-              final articleName = articleAZ['title'] ?? '';
-              final articleBody = articleAZ['body'] ?? '';
-              final categoryName = articleAZ['main_category_id'] ?? '';
+                return ListView.builder(
+                  itemCount: filteredGalleries.length,
+                  itemBuilder: (context, index) {
+                    final gallery = filteredGalleries[index];
+                    final galleryName = gallery['name'] ?? '';
+                    final galleryId = gallery['id'];
+                    final galleryTitle = gallery['title'] ?? '';
+                    final galleryBody = gallery['body'] ?? '';
 
-              return Card(
-                child: ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GalleryPhotosPage(
-                          galleryId: articleAZId,
-                          galleryName: galeryName,
+                    return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0),
+                      ),
+                      color: cardColor,
+                      child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GalleryPhotosPage(
+                                galleryId: galleryId,
+                                galleryName: galleryName,
+                              ),
+                            ),
+                          );
+                        },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit),
+                              color: buttonColor,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => GalleryPhotosPage(
+                                      galleryId: galleryId,
+                                      galleryName: galleryName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              style: ButtonStyle(
+                                foregroundColor:
+                                    MaterialStateProperty.all(Colors.red),
+                              ),
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                await _deleteGallery(galleryId, galleryName);
+                              },
+                            ),
+                          ],
                         ),
+                        visualDensity:
+                            const VisualDensity(horizontal: 0, vertical: -4),
+                        leading: Text((index + 1).toString()),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Text('Name:'),
+                                Row(
+                                  children: [
+                                    Text('Name:'),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      galleryName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            //Text(galleryBody, softWrap: true, maxLines: 2),
+                          ],
+                        ),
+                        // title: Row(
+                        //   children: [
+                        //     Text(galleryTitle.toUpperCase()),
+                        //   ],
+                        // ),
                       ),
                     );
                   },
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => EditArticlePage(
-                          //       article: articleAZ,
-                          //     ),
-                          //   ),
-                          // ).then((value) {
-                          //   if (value == true) {
-                          //     setState(() {}); // Odśwież listę po powrocie
-                          //   }
-                          // });
-                        },
-                      ),
-                      IconButton(
-                        style: ButtonStyle(
-                          foregroundColor:
-                              MaterialStateProperty.all(Colors.red),
-                        ),
-                        icon: const Icon(Icons.delete),
-                        onPressed: () async {
-                          await _deleteGallery(articleAZId, galeryName);
-                        },
-                      ),
-                    ],
-                  ),
-                  visualDensity:
-                      const VisualDensity(horizontal: 0, vertical: -4),
-                  leading: Text((index + 1).toString()),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text('Name:'),
-                          Text(galeryName),
-                        ],
-                      ),
-                      Text(articleBody, softWrap: true, maxLines: 2),
-                    ],
-                  ),
-                  title: Row(
-                    children: [
-                      Text(articleName.toUpperCase()),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

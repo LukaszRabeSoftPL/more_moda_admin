@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 Widget MainButton({
   required String text,
   required VoidCallback onPressed,
-  Color? color = Colors.blue,
+  Color? color = const Color(0xFF6A93C3),
   Color? textColor = Colors.white,
   double? width = 200,
   double? height = 50,
   double? fontSize = 16,
-  double? borderRadius = 20,
+  double? borderRadius = 0,
 }) {
   return SizedBox(
       width: width,

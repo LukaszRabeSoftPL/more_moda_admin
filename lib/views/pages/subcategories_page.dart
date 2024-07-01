@@ -1,4 +1,6 @@
 import 'package:architect_schwarz_admin/controllers/subcategories_controller.dart';
+import 'package:architect_schwarz_admin/static/static.dart';
+import 'package:architect_schwarz_admin/views/widgets/add_subcategory_baustoffe.dart';
 import 'package:architect_schwarz_admin/views/widgets/add_subcategory_bauteile.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';
@@ -15,6 +17,8 @@ class SubCategoriesPage extends StatefulWidget {
 class _SubCategoriesPageState extends State<SubCategoriesPage> {
   //subabase instance
   SupabaseClient client = Supabase.instance.client;
+  String newSubCategoryName = '';
+  int categoryId = 0;
 
   @override
   void initState() {
@@ -48,9 +52,13 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
               children: [
                 const Align(
                   alignment: Alignment.topLeft,
-                  child: Text(
-                    'Bauteile Categories',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Bauteile Categories',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 Divider(),
@@ -68,114 +76,177 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                         itemBuilder: (context, index) {
                           final categoryBauteile = categoriesBauteile[index];
                           final categoryBauteileId = categoryBauteile['id'];
-                          return ListTile(
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit),
-                                  onPressed: () {
-                                    showDialog(
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(0),
+                            ),
+                            color: cardColor,
+                            child: ListTile(
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: buttonColor,
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            final TextEditingController
+                                                controller =
+                                                TextEditingController(
+                                                    text: categoryBauteile?[
+                                                        'name']);
+                                            return SimpleDialog(
+                                              title: const Text(
+                                                  'Kategorienamen ändern'),
+                                              children: [
+                                                Divider(
+                                                  thickness: 1,
+                                                  color: buttonColor,
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: TextFormField(
+                                                    onChanged: (value) => {
+                                                      newSubCategoryName =
+                                                          value,
+                                                      categoryId =
+                                                          categoryBauteileId,
+                                                    },
+                                                    controller: controller,
+                                                    // initialValue:
+                                                    //     categoryBauteile?['name'],
+                                                    onFieldSubmitted:
+                                                        (value) async {
+                                                      //!tutaj wklej kod
+                                                      updateSubCategoryBauteile(
+                                                          categoryBauteileId,
+                                                          value);
+
+                                                      if (mounted)
+                                                        Navigator.pop(context);
+                                                      setState(() {});
+                                                    },
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: customButton(
+                                                    text: 'Speichern',
+                                                    onPressed: () async {
+                                                      await updateSubCategoryBauteile(
+                                                          categoryId,
+                                                          newSubCategoryName);
+                                                      setState(
+                                                          () {}); // Upewnij się, że stan jest zaktualizowany
+                                                      Navigator.pop(
+                                                          context); // Zamknij dialog
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          });
+                                    },
+                                  ),
+                                  IconButton(
+                                    style: ButtonStyle(
+                                      foregroundColor:
+                                          MaterialStateProperty.all(Colors.red),
+                                    ),
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () async {
+                                      bool isConfirmed = await showDialog(
                                         context: context,
                                         builder: (context) {
-                                          final TextEditingController
-                                              controller =
-                                              TextEditingController(
-                                                  text: categoryBauteile?[
-                                                      'name']);
-                                          return SimpleDialog(
-                                            title: const Text(
-                                                'Change category name'),
-                                            children: [
-                                              TextFormField(
-                                                controller: controller,
-                                                // initialValue:
-                                                //     categoryBauteile?['name'],
-                                                onFieldSubmitted:
-                                                    (value) async {
-                                                  //!tutaj wklej kod
-                                                  updateSubCategoryBauteile(
-                                                      categoryBauteileId,
-                                                      value);
-
-                                                  if (mounted)
-                                                    Navigator.pop(context);
-                                                  setState(() {});
+                                          return AlertDialog(
+                                            title: Text('Kategorie löschen'),
+                                            content: Text(
+                                                'Sind Sie sicher, dass Sie löschen möchten ${categoryBauteile?['name']} Kategorie?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context, false);
                                                 },
-                                              )
+                                                child: Text('NEIN'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(true),
+                                                child: Container(
+                                                  width: 50,
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                          Icons
+                                                              .delete_forever_sharp,
+                                                          color: Colors.white,
+                                                          size: 20),
+                                                      SizedBox(
+                                                          width:
+                                                              5), // Add some space between the icon and the text
+                                                      const Text('JA'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                style: TextButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.red),
+                                              ),
                                             ],
                                           );
+                                        },
+                                      );
+                                      if (isConfirmed) {
+                                        await deleteSubCategoryBauteile(
+                                            categoryBauteileId);
+                                        setState(() {
+                                          // ignore: avoid_print
+                                          print('refresh deleted categories');
                                         });
-                                  },
-                                ),
-                                IconButton(
-                                  style: ButtonStyle(
-                                    foregroundColor:
-                                        MaterialStateProperty.all(Colors.red),
+                                      }
+                                    },
                                   ),
-                                  icon: const Icon(Icons.delete),
-                                  onPressed: () async {
-                                    bool isConfirmed = await showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: Text('Delete category'),
-                                          content: Text(
-                                              'Are you sure you want to delete ${categoryBauteile?['name']} category?'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context, false);
-                                              },
-                                              child: Text('NO'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context, true);
-                                              },
-                                              child: Text('YES'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                    if (isConfirmed) {
-                                      await deleteSubCategoryBauteile(
-                                          categoryBauteileId);
-                                      setState(() {
-                                        // ignore: avoid_print
-                                        print('refresh deleted categories');
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
+                                ],
+                              ),
+                              visualDensity: const VisualDensity(
+                                  horizontal: 0, vertical: -4),
+                              leading: Text((index + 1).toString()),
+                              title:
+                                  Text(categoryBauteile?['name'].toUpperCase()),
                             ),
-                            visualDensity: const VisualDensity(
-                                horizontal: 0, vertical: -4),
-                            leading: Text((index + 1).toString()),
-                            title:
-                                Text(categoryBauteile?['name'].toUpperCase()),
                           );
                         },
                       );
                     },
                   ),
                 ),
-                customButton(
-                  text: 'add category',
-                  onPressed: () async {
-                    await showDialog(
-                      context: context,
-                      builder: (context) {
-                        return addSubcategoryBauteile();
-                      },
-                    );
-                    setState(() {
-                      // ignore: avoid_print
-                      print('refresh categories');
-                    });
-                  },
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: customButton(
+                    text: 'Unterkategorie hinzufügen',
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return addSubcategoryBauteile();
+                        },
+                      );
+                      setState(() {
+                        // ignore: avoid_print
+                        print('refresh categories');
+                      });
+                    },
+                  ),
                 )
               ],
             ),
@@ -187,9 +258,13 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
               children: [
                 const Align(
                   alignment: Alignment.topLeft,
-                  child: Text(
-                    'Baustoffe Categories',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Baustoffe Categories',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 Divider(),
@@ -206,18 +281,186 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                         itemCount: categoriesBaustoffe?.length,
                         itemBuilder: (context, index) {
                           final categoryBaustoffe = categoriesBaustoffe?[index];
-                          return ListTile(
-                            visualDensity: const VisualDensity(
-                                horizontal: 0, vertical: -4),
-                            leading: Text((index + 1).toString()),
-                            title:
-                                Text(categoryBaustoffe?['name'].toUpperCase()),
+                          final categoryBaustoffeId = categoryBaustoffe?['id'];
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(0),
+                            ),
+                            color: cardColor,
+                            child: ListTile(
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: buttonColor,
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          final TextEditingController
+                                              controller =
+                                              TextEditingController(
+                                                  text: categoryBaustoffe?[
+                                                      'name']);
+                                          return SimpleDialog(
+                                            title: Text(
+                                              'Kategorienamen ändern',
+                                              style: TextStyle(
+                                                color: buttonColor,
+                                              ),
+                                            ),
+                                            children: [
+                                              Divider(
+                                                thickness: 1,
+                                                color: buttonColor,
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: TextFormField(
+                                                  controller: controller,
+                                                  onChanged: (
+                                                    value,
+                                                  ) {
+                                                    newSubCategoryName = value;
+                                                    categoryId =
+                                                        categoryBaustoffeId;
+                                                  },
+                                                  // initialValue:
+                                                  //     categoryBauteile?['name'],
+                                                  onFieldSubmitted:
+                                                      (value) async {
+                                                    //!tutaj wklej kod
+                                                    updateSubCategoryBaustoffe(
+                                                        categoryBaustoffeId,
+                                                        value);
+
+                                                    if (mounted)
+                                                      Navigator.pop(context);
+                                                    setState(() {});
+                                                  },
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: customButton(
+                                                  text: 'Speichern',
+                                                  onPressed: () async {
+                                                    await updateSubCategoryBaustoffe(
+                                                        categoryId,
+                                                        newSubCategoryName);
+                                                    setState(
+                                                        () {}); // Upewnij się, że stan jest zaktualizowany
+                                                    Navigator.pop(
+                                                        context); // Zamknij dialog
+                                                  },
+                                                ),
+                                              )
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                  //SizedBox(width: 10),
+                                  IconButton(
+                                    style: ButtonStyle(
+                                      foregroundColor:
+                                          MaterialStateProperty.all(Colors.red),
+                                    ),
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () async {
+                                      bool isConfirmed = await showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text('Kategorie löschen'),
+                                            content: Text(
+                                                'Sind Sie sicher, dass Sie löschen möchten ${categoryBaustoffe?['name']} Kategorie?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context, false);
+                                                },
+                                                child: Text('NEIN'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(true),
+                                                child: Container(
+                                                  width: 50,
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                          Icons
+                                                              .delete_forever_sharp,
+                                                          color: Colors.white,
+                                                          size: 20),
+                                                      SizedBox(
+                                                          width:
+                                                              5), // Add some space between the icon and the text
+                                                      const Text('JA'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                style: TextButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.red),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      if (isConfirmed) {
+                                        await deleteSubCategoryBaustoffe(
+                                            categoryBaustoffeId);
+                                        setState(() {
+                                          // ignore: avoid_print
+                                          print('refresh deleted categories');
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                              visualDensity: const VisualDensity(
+                                  horizontal: 0, vertical: -4),
+                              leading: Text((index + 1).toString()),
+                              title: Text(
+                                  categoryBaustoffe?['name'].toUpperCase()),
+                            ),
                           );
                         },
                       );
                     },
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: customButton(
+                    text: 'Unterkategorie hinzufügen',
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AddSubcategoryBaustoffe();
+                        },
+                      );
+                      setState(() {
+                        // ignore: avoid_print
+                        print('refresh categories');
+                      });
+                    },
+                  ),
+                )
               ],
             ),
           ),

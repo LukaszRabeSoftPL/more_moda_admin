@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; // Dodano import dla formatu daty
 
 class AddPhotoPage extends StatefulWidget {
   @override
@@ -21,7 +22,7 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
   Future<void> _pickImage() async {
     if (_images.length >= 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only upload up to 6 images.')),
+        SnackBar(content: Text('Sie können nur maximal 6 Bilder hochladen.')),
       );
       return;
     }
@@ -36,7 +37,7 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
         for (var file in result.files) {
           if (_images.length < 6) {
             _images.add(file.bytes!);
-            _imageNames.add(file.name);
+            _imageNames.add(_addTimestampToFileName(file.name));
           }
         }
       });
@@ -46,7 +47,7 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
   Future<void> _pickSketch() async {
     if (_sketches.length >= 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only upload up to 6 sketches.')),
+        SnackBar(content: Text('Sie können nur maximal 6 Skizzen hochladen.')),
       );
       return;
     }
@@ -61,11 +62,19 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
         for (var file in result.files) {
           if (_sketches.length < 6) {
             _sketches.add(file.bytes!);
-            _sketchNames.add(file.name);
+            _sketchNames.add(_addTimestampToFileName(file.name));
           }
         }
       });
     }
+  }
+
+  String _addTimestampToFileName(String fileName) {
+    final String timestamp =
+        DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final String extension = fileName.split('.').last;
+    final String baseName = fileName.split('.').first;
+    return '$baseName\_$timestamp.$extension';
   }
 
   Future<void> _createGallery() async {
@@ -81,7 +90,7 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
       });
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create gallery: $error')),
+        SnackBar(content: Text('Galerie konnte nicht erstellt werden: $error')),
       );
     }
   }
@@ -138,19 +147,19 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text(
-                      'Failed to save image URL: ${insertResponse.error!.message}')),
+                      'Bild-URL konnte nicht gespeichert werden: ${insertResponse.error!.message}')),
             );
             return;
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Upload failed: ${response.body}')),
+            SnackBar(content: Text('Upload fehlgeschlagen: ${response.body}')),
           );
           return;
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('upload image: $fileName')),
+          SnackBar(content: Text('Bild hochladen: $fileName')),
         );
       }
     }
@@ -187,25 +196,28 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text(
-                      'Failed to save sketch URL: ${insertResponse.error!.message}')),
+                      'Die Skizzen-URL konnte nicht gespeichert werden.: ${insertResponse.error!.message}')),
             );
             return;
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Upload failed: ${response.body}')),
+            SnackBar(content: Text('Upload fehlgeschlagen: ${response.body}')),
           );
           return;
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('upload image: $fileName')),
+          SnackBar(content: Text('Bild hochladen: $fileName')),
         );
       }
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Upload successful!')),
+      SnackBar(
+        content: Text('Hochladen erfolgreich!'),
+        backgroundColor: Colors.green,
+      ),
     );
 
     setState(() {
@@ -223,24 +235,26 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Upload Images'),
+        title: Text('Bilder hochladen'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
-              controller: _galleryNameController,
-              decoration: InputDecoration(labelText: 'Gallery Name'),
-            ),
+                controller: _galleryNameController,
+                decoration: InputDecoration(
+                  labelText: 'Galeriename',
+                  border: OutlineInputBorder(),
+                )),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _pickImage,
-              child: Text('Pick Images'),
+              child: Text('Bilder auswählen'),
             ),
             SizedBox(height: 20),
             _images.isEmpty
-                ? Text('No images selected.')
+                ? Text('Keine Bilder ausgewählt.')
                 : Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -270,11 +284,11 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _pickSketch,
-              child: Text('Pick Sketches'),
+              child: Text('Skizzen auswählen'),
             ),
             SizedBox(height: 20),
             _sketches.isEmpty
-                ? Text('No sketches selected.')
+                ? Text('Keine Bilder ausgewählt.')
                 : Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -306,7 +320,7 @@ class _AddPhotoPageState extends State<AddPhotoPage> {
               onPressed: _images.isNotEmpty || _sketches.isNotEmpty
                   ? _uploadImages
                   : null,
-              child: Text('Upload Images and Sketches'),
+              child: Text('Bilder und Skizzen hochladen'),
             ),
           ],
         ),

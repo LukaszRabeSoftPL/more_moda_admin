@@ -1,34 +1,32 @@
 import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
+import 'package:architect_schwarz_admin/controllers/subcategories_controller.dart';
 import 'package:architect_schwarz_admin/static/static.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 
-class AddMainCategoryCustomDialog extends StatelessWidget {
-  const AddMainCategoryCustomDialog({super.key});
+class AddSubcategoryBaustoffe extends StatelessWidget {
+  const AddSubcategoryBaustoffe({super.key});
 
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-    String newCategoryName = '';
+    String newSubCategoryName = '';
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(0),
-      ),
       child: Container(
         width: width * 0.3,
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
-          // border: Border.all(color: Color(0xFFC4CFD7), width: 3),
+          border: Border.all(color: Color(0xFF3E84BE), width: 3),
           color: Colors.white,
-          borderRadius: BorderRadius.circular(0),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Neue Kategorie hinzufügen',
+              'Neue Unterkategorie hinzufügen',
               style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -36,28 +34,25 @@ class AddMainCategoryCustomDialog extends StatelessWidget {
             ),
             Divider(),
             TextFormField(
-              decoration: textFieldDecoration.copyWith(
-                labelText: 'Name der neuen Kategorie',
-              ),
+              showCursor: true,
               autofillHints: ['Add new category'],
               onChanged: (value) {
-                newCategoryName = value;
+                newSubCategoryName = value;
               },
               onFieldSubmitted: (value) {
-                createMainCategories(value);
+                createSubCategoryBaustoffe(value);
                 if (value != null && value.isNotEmpty) {
                   Navigator.pop(context);
                 }
               },
             ),
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox.fromSize(size: const Size(0, 10)),
             customButton(
-              text: 'Hinzufügen',
+              text: 'Unterkategorie hinzufügen',
               onPressed: () {
-                createMainCategories(newCategoryName);
-                if (newCategoryName != null && newCategoryName.isNotEmpty) {
+                createSubCategoryBaustoffe(newSubCategoryName);
+                if (newSubCategoryName != null &&
+                    newSubCategoryName.isNotEmpty) {
                   Navigator.pop(context);
                 }
               },

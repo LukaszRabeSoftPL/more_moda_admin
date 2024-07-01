@@ -1,7 +1,9 @@
-import 'package:architect_schwarz_admin/views/pages/article_az_add_page.dart';
-import 'package:architect_schwarz_admin/views/pages/article_az_edit_page.dart';
+import 'package:architect_schwarz_admin/static/static.dart';
+import 'package:architect_schwarz_admin/views/pages/articles/article_az_add_page.dart';
+import 'package:architect_schwarz_admin/views/pages/articles/article_az_edit_page.dart';
 import 'package:architect_schwarz_admin/views/widgets/add_subcategory_bauteile.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
+import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -53,28 +55,28 @@ class _Article_AZ_ListPageState extends State<Article_AZ_ListPage> {
         .stream(primaryKey: ['id']).order('id', ascending: true);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Article List'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddArticlePage(),
-                ),
-              ).then((value) {
-                if (value == true) {
-                  setState(() {}); // Odśwież listę po powrocie
-                }
-              });
-            },
-          ),
-        ],
-      ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        //mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: customButton(
+              text: 'Artikel hinzufügen',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddArticlePage(),
+                  ),
+                ).then((value) {
+                  if (value == true) {
+                    setState(() {}); // Odśwież listę po powrocie
+                  }
+                });
+              },
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -83,14 +85,17 @@ class _Article_AZ_ListPageState extends State<Article_AZ_ListPage> {
                   child: TextField(
                     controller: searchController,
                     decoration: InputDecoration(
-                      labelText: 'Search by Title',
+                      labelText: 'Suche nach Titel',
+                      prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
                 SizedBox(width: 8),
                 DropdownButton<int>(
-                  hint: Text('Filter by Category'),
+                  dropdownColor: Colors.white,
+                  focusColor: Colors.white,
+                  hint: Text('Nach Kategorie filtern'),
                   value: selectedCategory,
                   icon: Icon(Icons.filter_list),
                   onChanged: (int? newValue) {
@@ -99,7 +104,7 @@ class _Article_AZ_ListPageState extends State<Article_AZ_ListPage> {
                     });
                   },
                   items: [
-                    DropdownMenuItem(value: null, child: Text('ALL')),
+                    DropdownMenuItem(value: null, child: Text('ALLE')),
                     DropdownMenuItem(value: 1, child: Text(getCategoryText(1))),
                     DropdownMenuItem(value: 2, child: Text(getCategoryText(2))),
                     DropdownMenuItem(value: 3, child: Text(getCategoryText(3))),
@@ -108,6 +113,10 @@ class _Article_AZ_ListPageState extends State<Article_AZ_ListPage> {
                 ),
               ],
             ),
+          ),
+          Divider(
+            thickness: 1,
+            color: Color(0xFF6A93C3).withOpacity(0.5),
           ),
           Expanded(
             child: StreamBuilder(
@@ -138,12 +147,33 @@ class _Article_AZ_ListPageState extends State<Article_AZ_ListPage> {
                     final categoryName = articleAZ['main_category_id'] ?? '';
 
                     return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0),
+                      ),
+                      color: cardColor,
                       child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditArticlePage(
+                                article: articleAZ,
+                              ),
+                            ),
+                          ).then((value) {
+                            if (value == true) {
+                              setState(() {}); // Odśwież listę po powrocie
+                            }
+                          });
+                        },
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.edit),
+                              icon: Icon(
+                                Icons.edit,
+                                color: buttonColor,
+                              ),
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -171,22 +201,48 @@ class _Article_AZ_ListPageState extends State<Article_AZ_ListPage> {
                                   context: context,
                                   builder: (context) {
                                     return AlertDialog(
-                                      title: Text('Delete article'),
+                                      title: Row(
+                                        children: [
+                                          Text('Artikel löschen'),
+                                        ],
+                                      ),
                                       content: Text(
-                                          'Are you sure you want to delete the article ${articleName}?'),
+                                          'Sind Sie sicher, dass Sie den Artikel löschen möchten? : ${articleName}?'),
                                       actions: [
                                         TextButton(
                                           onPressed: () {
                                             Navigator.pop(context, false);
                                           },
-                                          child: Text('NO'),
+                                          child: Text('NEIN'),
                                         ),
                                         TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context, true);
-                                          },
-                                          child: Text('YES'),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(true),
+                                          child: Container(
+                                            width: 50,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(Icons.delete_forever_sharp,
+                                                    color: Colors.white,
+                                                    size: 20),
+                                                SizedBox(
+                                                    width:
+                                                        5), // Add some space between the icon and the text
+                                                const Text('JA'),
+                                              ],
+                                            ),
+                                          ),
+                                          style: TextButton.styleFrom(
+                                              backgroundColor: Colors.red),
                                         ),
+                                        // TextButton(
+                                        //   onPressed: () {
+                                        //     Navigator.pop(context, true);
+                                        //   },
+                                        //   child: Text('JA'),
+                                        // ),
                                       ],
                                     );
                                   },
@@ -201,22 +257,57 @@ class _Article_AZ_ListPageState extends State<Article_AZ_ListPage> {
                         ),
                         visualDensity:
                             const VisualDensity(horizontal: 0, vertical: -4),
-                        leading: Text((index + 1).toString()),
+                        leading: Text(
+                          (index + 1).toString(),
+                          // style: TextStyle(
+                          //   fontWeight: FontWeight.bold,
+                          //   color: Colors.red,
+                          // ),
+                        ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Text('category:'),
-                                Text(getCategoryText(categoryName)),
+                                Text(
+                                  'Kategorie:',
+                                  style: TextStyle(
+                                    // fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  getCategoryText(categoryName),
+                                  style: TextStyle(
+                                    //fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ],
                             ),
-                            Text(articleBody, softWrap: true, maxLines: 2),
+                            // Text(
+                            //   articleBody,
+                            //   softWrap: true,
+                            //   maxLines: 3,
+                            //   style: TextStyle(
+                            //     fontSize: 12,
+                            //   ),
+                            // ),
+                            // SizedBox(
+                            //   width: 100,
+                            // )
                           ],
                         ),
                         title: Row(
                           children: [
-                            Text(articleName.toUpperCase()),
+                            Text(
+                              articleName.toUpperCase(),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                           ],
                         ),
                       ),

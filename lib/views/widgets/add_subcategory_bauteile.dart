@@ -1,6 +1,7 @@
 import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
 import 'package:architect_schwarz_admin/controllers/subcategories_controller.dart';
 import 'package:architect_schwarz_admin/static/static.dart';
+import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 
 class addSubcategoryBauteile extends StatelessWidget {
@@ -10,6 +11,7 @@ class addSubcategoryBauteile extends StatelessWidget {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
+    String newSubCategoryName = '';
 
     return Dialog(
       child: Container(
@@ -24,7 +26,7 @@ class addSubcategoryBauteile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Add new category',
+              'Neue Unterkategorie hinzufügen',
               style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -32,10 +34,25 @@ class addSubcategoryBauteile extends StatelessWidget {
             ),
             Divider(),
             TextFormField(
+              showCursor: true,
               autofillHints: ['Add new category'],
+              onChanged: (value) {
+                newSubCategoryName = value;
+              },
               onFieldSubmitted: (value) {
                 createSubCategoryBauteile(value);
                 if (value != null && value.isNotEmpty) {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            SizedBox.fromSize(size: const Size(0, 10)),
+            customButton(
+              text: 'Unterkategorie hinzufügen',
+              onPressed: () {
+                createSubCategoryBauteile(newSubCategoryName);
+                if (newSubCategoryName != null &&
+                    newSubCategoryName.isNotEmpty) {
                   Navigator.pop(context);
                 }
               },
