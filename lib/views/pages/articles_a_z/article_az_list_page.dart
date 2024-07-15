@@ -1,6 +1,6 @@
 import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/pages/articles/article_az_add_page.dart';
-import 'package:architect_schwarz_admin/views/pages/articles/article_az_edit_page.dart';
+import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_add_page.dart';
+import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_edit_page.dart';
 import 'package:architect_schwarz_admin/views/widgets/add_subcategory_bauteile.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';

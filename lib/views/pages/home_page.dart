@@ -2,7 +2,9 @@ import 'package:architect_schwarz_admin/controllers/articles_a_z_controller.dart
 import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
 import 'package:architect_schwarz_admin/main.dart';
 import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/pages/articles/article_az_list_page.dart';
+import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_list_page.dart';
+import 'package:architect_schwarz_admin/views/pages/articles_normal/article_list_page.dart';
+// Import nowego ekranu
 import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
 import 'package:architect_schwarz_admin/views/pages/companies/companies_list_page.dart';
 import 'package:architect_schwarz_admin/views/pages/companies_page.dart';
@@ -38,8 +40,8 @@ class _HomePageState extends State<HomePage> {
       body: Row(
         children: [
           Container(
-            width: 200, // szerokość bocznego menu
-            color: Color(0xFF6A93C3), // kolor tła menu
+            width: 200,
+            color: Color(0xFF6A93C3),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -60,23 +62,23 @@ class _HomePageState extends State<HomePage> {
                       icon: Icons.subdirectory_arrow_right,
                       text: 'Unterkategorie',
                     ),
-                    // _buildMenuItem(
-                    //   index: 6,
-                    //   icon: Icons.subject_outlined,
-                    //   text: 'SubUnterkategorie',
-                    // ),
                     _buildMenuItem(
                       index: 2,
                       icon: Icons.article,
-                      text: 'Artikel',
+                      text: 'Artikel A-Z',
                     ),
                     _buildMenuItem(
                       index: 3,
+                      icon: Icons.article_outlined,
+                      text: 'Artykuły',
+                    ),
+                    _buildMenuItem(
+                      index: 4,
                       icon: Icons.photo_album,
                       text: 'Galerien',
                     ),
                     _buildMenuItem(
-                      index: 5,
+                      index: 6,
                       icon: Icons.business,
                       text: 'Firmen',
                     ),
@@ -125,45 +127,16 @@ class _HomePageState extends State<HomePage> {
                 CategoriesPage(),
                 SubCategoriesPage(),
                 Article_AZ_ListPage(),
+                NormalArticleListPage(), // Nowy ekran
                 GalerryListPage(),
                 AddGalery2(),
                 CompaniesListPage(),
                 SubSubCategoriesListPage(),
-
-                //CompaniesPage(),
               ],
             ),
           )
         ],
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () async {
-      //     showDialog(
-      //       context: context,
-      //       builder: (context) {
-      //         return SimpleDialog(
-      //           title: Text('Add new category'),
-      //           children: [
-      //             TextFormField(
-      //               onFieldSubmitted: (value) {
-      //                 createMainCategories(value);
-      //                 if (value.isNotEmpty) {
-      //                   Navigator.pop(context);
-      //                 } else {
-      //                   Navigator.pop(context);
-      //                 }
-      //               },
-      //             )
-      //           ],
-      //         );
-      //       },
-      //     );
-      //     // await Supabase.instance.client.auth.signOut();
-      //     // Get.offAll(() => LoginScreen());
-      //   },
-      //   child: Icon(Icons.exit_to_app),
-      //   tooltip: 'Logout',
-      // ),
     );
   }
 
