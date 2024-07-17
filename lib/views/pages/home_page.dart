@@ -4,7 +4,6 @@ import 'package:architect_schwarz_admin/main.dart';
 import 'package:architect_schwarz_admin/static/static.dart';
 import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_list_page.dart';
 import 'package:architect_schwarz_admin/views/pages/articles_normal/article_list_page.dart';
-// Import nowego ekranu
 import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
 import 'package:architect_schwarz_admin/views/pages/companies/companies_list_page.dart';
 import 'package:architect_schwarz_admin/views/pages/companies_page.dart';
@@ -13,6 +12,7 @@ import 'package:architect_schwarz_admin/views/pages/gallery/gallery_list_page.da
 import 'package:architect_schwarz_admin/views/pages/login_page.dart';
 import 'package:architect_schwarz_admin/views/pages/sub_subcategories/sub_subcategories_list_page.dart';
 import 'package:architect_schwarz_admin/views/pages/subcategories_page.dart';
+import 'package:architect_schwarz_admin/views/pages/werbung/werbung_list_page.dart'; // Import nowego ekranu
 import 'package:fancy_button_flutter/fancy_button_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage> {
                     _buildMenuItem(
                       index: 3,
                       icon: Icons.article_outlined,
-                      text: 'Artykuły',
+                      text: 'Artikel',
                     ),
                     _buildMenuItem(
                       index: 4,
@@ -81,6 +81,11 @@ class _HomePageState extends State<HomePage> {
                       index: 6,
                       icon: Icons.business,
                       text: 'Firmen',
+                    ),
+                    _buildMenuItem(
+                      index: 7,
+                      icon: Icons.web,
+                      text: 'Werbung',
                     ),
                   ],
                 ),
@@ -127,11 +132,11 @@ class _HomePageState extends State<HomePage> {
                 CategoriesPage(),
                 SubCategoriesPage(),
                 Article_AZ_ListPage(),
-                NormalArticleListPage(), // Nowy ekran
+                NormalArticleListPage(),
                 GalerryListPage(),
                 AddGalery2(),
                 CompaniesListPage(),
-                SubSubCategoriesListPage(),
+                WerbungListPage(), // Nowy ekran
               ],
             ),
           )

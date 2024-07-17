@@ -19,12 +19,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
 
   // Kontrolery tekstowe
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _mainCategoryIdController =
-      TextEditingController();
-  final TextEditingController _subcategoryIdController =
-      TextEditingController();
-  final TextEditingController _subSubcategoriesIdController =
-      TextEditingController();
   final TextEditingController _streetController = TextEditingController();
   final TextEditingController _homeNumberController = TextEditingController();
   final TextEditingController _zipCodeController = TextEditingController();
@@ -36,18 +30,24 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
   final TextEditingController _productsController = TextEditingController();
 
   String? _imageUrl;
+  int? _selectedMainCategoryId;
+  int? _selectedSubcategoryId;
+  int? _selectedSubSubcategoryId;
+
+  List<Map<String, dynamic>> _mainCategories = [];
+  List<Map<String, dynamic>> _subcategories = [];
+  List<Map<String, dynamic>> _subSubcategories = [];
+  List<Map<String, dynamic>> _filteredSubSubcategories = [];
 
   @override
   void initState() {
     super.initState();
+    _fetchCategories();
     if (widget.company != null) {
       _nameController.text = widget.company!['name'] ?? '';
-      _mainCategoryIdController.text =
-          widget.company!['main_category_id']?.toString() ?? '';
-      _subcategoryIdController.text =
-          widget.company!['subcategory_id']?.toString() ?? '';
-      _subSubcategoriesIdController.text =
-          widget.company!['sub_subcategories_id']?.toString() ?? '';
+      _selectedMainCategoryId = widget.company!['main_category_id'];
+      _selectedSubcategoryId = widget.company!['subcategory_id'];
+      _selectedSubSubcategoryId = widget.company!['sub_subcategories_id'];
       _streetController.text = widget.company!['street'] ?? '';
       _homeNumberController.text = widget.company!['home_number'] ?? '';
       _zipCodeController.text = widget.company!['zip_code'] ?? '';
@@ -58,6 +58,50 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
       _wwwController.text = widget.company!['www'] ?? '';
       _productsController.text = widget.company!['products'] ?? '';
       _imageUrl = widget.company!['image_url'];
+    }
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final mainCategoriesResponse =
+          await client.from('main_categories').select();
+      final subcategoriesResponse =
+          await client.from('subcategories_main_categories').select();
+      final subSubcategoriesResponse =
+          await client.from('sub_subcategories_main_categories').select();
+
+      setState(() {
+        _mainCategories = (mainCategoriesResponse as List)
+            .map((e) => e as Map<String, dynamic>)
+            .toList();
+        _subcategories = (subcategoriesResponse as List)
+            .map((e) => e as Map<String, dynamic>)
+            .toList();
+        _subSubcategories = (subSubcategoriesResponse as List)
+            .map((e) => e as Map<String, dynamic>)
+            .toList();
+      });
+
+      _filterSubSubcategories();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch categories: $e')),
+      );
+    }
+  }
+
+  void _filterSubSubcategories() {
+    if (_selectedSubcategoryId != null) {
+      setState(() {
+        _filteredSubSubcategories = _subSubcategories
+            .where((subSubcategory) =>
+                subSubcategory['sub_category_id'] == _selectedSubcategoryId)
+            .toList();
+      });
+    } else {
+      setState(() {
+        _filteredSubSubcategories = [];
+      });
     }
   }
 
@@ -92,13 +136,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
     }
   }
 
-  int? _tryParseInt(String? value) {
-    if (value == null || value.isEmpty) {
-      return null;
-    }
-    return int.tryParse(value);
-  }
-
   void _saveCompany() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -107,9 +144,9 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
 
     final Map<String, dynamic> _formData = {
       'name': _nameController.text,
-      'main_category_id': _tryParseInt(_mainCategoryIdController.text),
-      'subcategory_id': _tryParseInt(_subcategoryIdController.text),
-      'sub_subcategories_id': _tryParseInt(_subSubcategoriesIdController.text),
+      'main_category_id': _selectedMainCategoryId,
+      'subcategory_id': _selectedSubcategoryId,
+      'sub_subcategories_id': _selectedSubSubcategoryId,
       'image_url': _imageUrl,
       'street': _streetController.text,
       'home_number': _homeNumberController.text,
@@ -145,9 +182,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
   void dispose() {
     // Pamiętaj, aby wyczyścić kontrolery tekstowe
     _nameController.dispose();
-    _mainCategoryIdController.dispose();
-    _subcategoryIdController.dispose();
-    _subSubcategoriesIdController.dispose();
     _streetController.dispose();
     _homeNumberController.dispose();
     _zipCodeController.dispose();
@@ -185,43 +219,86 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
                 },
               ),
               SizedBox(height: 10),
-              TextFormField(
-                controller: _mainCategoryIdController,
+              DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                    labelText: 'Main Category ID',
-                    border: OutlineInputBorder()),
+                    labelText: 'Hauptkategorie', border: OutlineInputBorder()),
+                value: _selectedMainCategoryId,
+                items: _mainCategories.map((category) {
+                  return DropdownMenuItem<int>(
+                    value: category['id'],
+                    child: Text(category['name']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMainCategoryId = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a main category';
+                  }
+                  return null;
+                },
               ),
               SizedBox(height: 10),
-              TextFormField(
-                controller: _subcategoryIdController,
+              DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                    labelText: 'Subcategory ID', border: OutlineInputBorder()),
+                    labelText: 'Unterkategorie', border: OutlineInputBorder()),
+                value: _selectedSubcategoryId,
+                items: _subcategories.map((subcategory) {
+                  return DropdownMenuItem<int>(
+                    value: subcategory['id'],
+                    child: Text(subcategory['name']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSubcategoryId = value;
+                    _filterSubSubcategories();
+                    _selectedSubSubcategoryId =
+                        null; // Reset sub subcategory when subcategory changes
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a subcategory';
+                  }
+                  return null;
+                },
               ),
               SizedBox(height: 10),
-              TextFormField(
-                controller: _subSubcategoriesIdController,
+              DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                    labelText: 'Sub Subcategories ID',
+                    labelText: 'Sub Unterkategorie',
                     border: OutlineInputBorder()),
+                value: _selectedSubSubcategoryId,
+                items: _filteredSubSubcategories.map((subSubcategory) {
+                  return DropdownMenuItem<int>(
+                    value: subSubcategory['id'],
+                    child: Text(subSubcategory['name']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSubSubcategoryId = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a sub subcategory';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               ElevatedButton(
                 onPressed: _pickImage,
-                child: const Text(
-                  'Logofoto',
-                ),
+                child: const Text('Logo Foto'),
               ),
               if (_imageUrl != null && _imageUrl!.isNotEmpty)
                 Container(
-                  // width: 200,
-                  // height: 200,
-                  child: Image.network(
-                    _imageUrl!,
-                    //scale: 0.3,
-                    //width: 100,
-                    //  height: 100,
-                    // fit: BoxFit.cover,
-                  ),
+                  child: Image.network(_imageUrl!),
                 ),
               SizedBox(height: 10),
               TextFormField(
@@ -283,12 +360,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
                   text:
                       widget.company == null ? 'Firma hinzufügen' : 'Speichern',
                   onPressed: _saveCompany),
-              // ElevatedButton(
-              //   onPressed: _saveCompany,
-              //   child: Text(widget.company == null
-              //       ? 'Firma hinzufügen'
-              //       : 'Änderungen speichern'),
-              // ),
             ],
           ),
         ),
