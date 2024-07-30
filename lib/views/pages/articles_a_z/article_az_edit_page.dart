@@ -17,6 +17,9 @@ class _EditArticlePageState extends State<EditArticlePage> {
   late TextEditingController titleController;
   HtmlEditorController bodyController = HtmlEditorController();
   int? selectedCategory;
+  int? selectedGalleryId;
+  String selectedGalleryName = '';
+  bool isHtmlView = false;
 
   @override
   void initState() {
@@ -38,7 +41,7 @@ class _EditArticlePageState extends State<EditArticlePage> {
     } else if (category == 4) {
       return 'Haustoffe';
     } else {
-      return 'Unknown';
+      return 'Unbekannt';
     }
   }
 
@@ -52,20 +55,36 @@ class _EditArticlePageState extends State<EditArticlePage> {
     }).eq('id', widget.article['id']);
   }
 
+  Future<void> _selectGallery() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelectGalleryPage(),
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        selectedGalleryId = result['id'];
+        selectedGalleryName = result['name'];
+      });
+      bodyController.insertHtml(
+          '<popup id="$selectedGalleryId">$selectedGalleryName</popup>');
+    }
+  }
+
+  void _toggleHtmlView() {
+    setState(() {
+      isHtmlView = !isHtmlView;
+    });
+    bodyController.toggleCodeView();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Artikel bearbeiten'),
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.save),
-          //   onPressed: () async {
-          //     await updateArticle();
-          //     Navigator.pop(context, true); // Zwraca true po zapisaniu zmian
-          //   },
-          // ),
-        ],
+        actions: [],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -122,6 +141,22 @@ class _EditArticlePageState extends State<EditArticlePage> {
                 ),
                 htmlToolbarOptions: HtmlToolbarOptions(
                   toolbarType: ToolbarType.nativeScrollable,
+                  customToolbarButtons: [
+                    GestureDetector(
+                      onTap: _selectGallery,
+                      child: Icon(Icons.add_box),
+                    ),
+                    GestureDetector(
+                      onTap: _toggleHtmlView,
+                      child: Icon(isHtmlView ? Icons.code_off : Icons.code),
+                    ),
+                  ],
+                  defaultToolbarButtons: [
+                    FontButtons(),
+                    ColorButtons(),
+                    ListButtons(),
+                    ParagraphButtons(),
+                  ],
                 ),
               ),
             ),
@@ -132,6 +167,91 @@ class _EditArticlePageState extends State<EditArticlePage> {
                 await updateArticle();
                 Navigator.pop(context, true); // Zwraca true po zapisaniu zmian
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SelectGalleryPage extends StatefulWidget {
+  @override
+  _SelectGalleryPageState createState() => _SelectGalleryPageState();
+}
+
+class _SelectGalleryPageState extends State<SelectGalleryPage> {
+  List<Map<String, dynamic>> galleries = [];
+  int? selectedGalleryId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGalleries();
+  }
+
+  Future<void> _loadGalleries() async {
+    try {
+      SupabaseClient client = Supabase.instance.client;
+      final List<dynamic> response =
+          await client.from('galerries').select('id, name');
+
+      setState(() {
+        galleries = response.cast<Map<String, dynamic>>();
+      });
+    } catch (error) {
+      // Fehlerbehandlung
+      print("Fehler beim Laden der Galerien: $error");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Galerie auswählen'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            DropdownButton<int>(
+              hint: Text('Galerie auswählen'),
+              value: selectedGalleryId,
+              onChanged: (int? newValue) {
+                setState(() {
+                  selectedGalleryId = newValue;
+                });
+              },
+              items: galleries.map((gallery) {
+                return DropdownMenuItem<int>(
+                  value: gallery['id'],
+                  child: Text(gallery['name']),
+                );
+              }).toList(),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  child: Text('Abbrechen'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    if (selectedGalleryId != null) {
+                      Navigator.of(context).pop({
+                        'id': selectedGalleryId,
+                        'name': galleries.firstWhere((gallery) =>
+                            gallery['id'] == selectedGalleryId)['name']
+                      });
+                    }
+                  },
+                ),
+              ],
             ),
           ],
         ),

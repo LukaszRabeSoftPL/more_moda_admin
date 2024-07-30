@@ -56,12 +56,12 @@ class MyApp extends StatelessWidget {
         ),
         // Styl dla TextField
         textTheme: TextTheme(
-          bodyText2: TextStyle(color: Colors.black), // Kolor czcionki
+          bodyMedium: TextStyle(color: Colors.black), // Kolor czcionki
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            primary: buttonColor, // Kolor tła przycisku
-            onPrimary: Colors.white, // Kolor tekstu przycisku
+            backgroundColor: buttonColor, // Kolor tła przycisku
+            foregroundColor: Colors.white, // Kolor tekstu przycisku
           ),
         ),
         dialogTheme: DialogTheme(
@@ -77,7 +77,7 @@ class MyApp extends StatelessWidget {
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            primary: Colors.white, // Kolor tekstu
+            foregroundColor: Colors.white,
             backgroundColor: buttonColor2, // Kolor tła
           ),
         ),

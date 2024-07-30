@@ -16,6 +16,9 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
   int? selectedMainCategory;
   int? selectedSubCategory;
   int? selectedSubSubCategory;
+  int? selectedGalleryId;
+  String selectedGalleryName = '';
+  bool isHtmlView = false;
 
   List<Map<String, dynamic>> mainCategories = [];
   List<Map<String, dynamic>> subCategories = [];
@@ -35,7 +38,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
         mainCategories = List<Map<String, dynamic>>.from(response);
       });
     } catch (error) {
-      print('Error loading main categories: $error');
+      print('Fehler beim Laden der Hauptkategorien: $error');
     }
   }
 
@@ -52,7 +55,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
         subSubCategories = [];
       });
     } catch (error) {
-      print('Error loading subcategories: $error');
+      print('Fehler beim Laden der Unterkategorien: $error');
     }
   }
 
@@ -67,7 +70,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
         selectedSubSubCategory = null;
       });
     } catch (error) {
-      print('Error loading sub-subcategories: $error');
+      print('Fehler beim Laden der Sub-Unterkategorien: $error');
     }
   }
 
@@ -83,7 +86,24 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
         'sub_subcategory_id': selectedSubSubCategory,
       });
     } catch (error) {
-      print('Error adding article: $error');
+      print('Fehler beim Hinzufügen des Artikels: $error');
+    }
+  }
+
+  Future<void> _selectGallery() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelectGalleryPage(),
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        selectedGalleryId = result['id'];
+        selectedGalleryName = result['name'];
+      });
+      htmlEditorController.insertHtml(
+          '<popup id="$selectedGalleryId">$selectedGalleryName</popup>');
     }
   }
 
@@ -93,7 +113,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edytuj treść'),
+          title: Text('Artikel bearbeiten'),
           content: Container(
             width: double.maxFinite,
             height: 400,
@@ -104,6 +124,27 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                 initialText: currentText, // Ustawienie początkowego tekstu
               ),
               htmlToolbarOptions: HtmlToolbarOptions(
+                customToolbarButtons: [
+                  GestureDetector(
+                    onTap: _selectGallery,
+                    child: Icon(Icons.add_box),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isHtmlView = !isHtmlView;
+                      });
+                      htmlEditorController.toggleCodeView();
+                    },
+                    child: Icon(isHtmlView ? Icons.code_off : Icons.code),
+                  ),
+                ],
+                defaultToolbarButtons: [
+                  FontButtons(),
+                  ColorButtons(),
+                  ListButtons(),
+                  ParagraphButtons(),
+                ],
                 toolbarType: ToolbarType.nativeScrollable,
               ),
             ),
@@ -117,7 +158,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                 });
                 Navigator.of(context).pop();
               },
-              child: Text('Zapisz'),
+              child: Text('Speichern'),
             ),
           ],
         );
@@ -212,7 +253,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        showCategoryModal(context, 'Podkategoria wählen',
+                        showCategoryModal(context, 'Unterkategorie wählen',
                             subCategories, selectedSubCategory, (int? value) {
                           setState(() {
                             selectedSubCategory = value;
@@ -221,13 +262,13 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                         });
                       },
                       child: Text(selectedSubCategory == null
-                          ? 'Podkategoria wählen'
+                          ? 'Unterkategorie wählen'
                           : subCategories.isNotEmpty
                               ? subCategories.firstWhere(
                                   (category) =>
                                       category['id'] == selectedSubCategory,
                                   orElse: () => {'name': 'N/A'})['name']
-                              : 'Podkategoria wählen'),
+                              : 'Unterkategorie wählen'),
                     ),
                   ),
                   SizedBox(width: 16),
@@ -236,7 +277,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                       onPressed: () {
                         showCategoryModal(
                             context,
-                            'Sub-Podkategoria wählen',
+                            'Sub-Unterkategorie wählen',
                             subSubCategories,
                             selectedSubSubCategory, (int? value) {
                           setState(() {
@@ -245,13 +286,13 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                         });
                       },
                       child: Text(selectedSubSubCategory == null
-                          ? 'Sub-Podkategoria wählen'
+                          ? 'Sub-Unterkategorie wählen'
                           : subSubCategories.isNotEmpty
                               ? subSubCategories.firstWhere(
                                   (category) =>
                                       category['id'] == selectedSubSubCategory,
                                   orElse: () => {'name': 'N/A'})['name']
-                              : 'Sub-Podkategoria wählen'),
+                              : 'Sub-Unterkategorie wählen'),
                     ),
                   ),
                 ],
@@ -265,7 +306,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
               controller: bodyController,
               maxLines: 5,
               decoration: InputDecoration(
-                labelText: 'Treść',
+                labelText: 'Text',
                 border: OutlineInputBorder(),
               ),
               readOnly: true,
@@ -278,6 +319,91 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                 await addArticle();
                 Navigator.pop(context, true); // Zwraca true po dodaniu artykułu
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SelectGalleryPage extends StatefulWidget {
+  @override
+  _SelectGalleryPageState createState() => _SelectGalleryPageState();
+}
+
+class _SelectGalleryPageState extends State<SelectGalleryPage> {
+  List<Map<String, dynamic>> galleries = [];
+  int? selectedGalleryId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGalleries();
+  }
+
+  Future<void> _loadGalleries() async {
+    try {
+      SupabaseClient client = Supabase.instance.client;
+      final List<dynamic> response =
+          await client.from('galerries').select('id, name');
+
+      setState(() {
+        galleries = response.cast<Map<String, dynamic>>();
+      });
+    } catch (error) {
+      // Fehlerbehandlung
+      print("Fehler beim Laden der Galerien: $error");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Galerie auswählen'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            DropdownButton<int>(
+              hint: Text('Galerie auswählen'),
+              value: selectedGalleryId,
+              onChanged: (int? newValue) {
+                setState(() {
+                  selectedGalleryId = newValue;
+                });
+              },
+              items: galleries.map((gallery) {
+                return DropdownMenuItem<int>(
+                  value: gallery['id'],
+                  child: Text(gallery['name']),
+                );
+              }).toList(),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  child: Text('Abbrechen'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    if (selectedGalleryId != null) {
+                      Navigator.of(context).pop({
+                        'id': selectedGalleryId,
+                        'name': galleries.firstWhere((gallery) =>
+                            gallery['id'] == selectedGalleryId)['name']
+                      });
+                    }
+                  },
+                ),
+              ],
             ),
           ],
         ),
