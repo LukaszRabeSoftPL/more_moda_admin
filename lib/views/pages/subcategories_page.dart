@@ -2,6 +2,8 @@ import 'package:architect_schwarz_admin/controllers/subcategories_controller.dar
 import 'package:architect_schwarz_admin/static/static.dart';
 import 'package:architect_schwarz_admin/views/widgets/add_subcategory_baustoffe.dart';
 import 'package:architect_schwarz_admin/views/widgets/add_subcategory_bauteile.dart';
+import 'package:architect_schwarz_admin/views/widgets/add_subcategory_gestaltung.dart';
+import 'package:architect_schwarz_admin/views/widgets/add_subcategory_plannung.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';
 import 'package:flutter/material.dart';
@@ -654,7 +656,7 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                       await showDialog(
                         context: context,
                         builder: (context) {
-                          return addSubcategoryBauteile();
+                          return AddSubcategoryGestaltung();
                         },
                       );
                       setState(() {
@@ -855,7 +857,7 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                       await showDialog(
                         context: context,
                         builder: (context) {
-                          return addSubcategoryBauteile();
+                          return AddSubcategoryPlannung();
                         },
                       );
                       setState(() {
