@@ -34,9 +34,9 @@ class _NormalArticleListPageState extends State<NormalArticleListPage> {
     } else if (category == 2) {
       return 'Baustoffe';
     } else if (category == 3) {
-      return 'Planung';
+      return 'Gestaltung';
     } else if (category == 4) {
-      return 'Haustoffe';
+      return 'Plannung';
     } else {
       return 'Keine Kategorie';
     }
