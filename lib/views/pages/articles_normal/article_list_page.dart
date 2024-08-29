@@ -38,7 +38,7 @@ class _NormalArticleListPageState extends State<NormalArticleListPage> {
     } else if (category == 4) {
       return 'Haustoffe';
     } else {
-      return 'Unknown';
+      return 'Keine Kategorie';
     }
   }
 
@@ -141,7 +141,8 @@ class _NormalArticleListPageState extends State<NormalArticleListPage> {
                     final articleId = article['id'];
                     final articleName = article['title'] ?? '';
                     final articleBody = article['body'] ?? '';
-                    final categoryName = article['main_category_id'] ?? '';
+                    final categoryName = article['main_category_id'] ??
+                        0; // Upewnij się, że zwracana jest liczba całkowita, nawet jeśli nie ma danych
 
                     return Card(
                       shape: RoundedRectangleBorder(

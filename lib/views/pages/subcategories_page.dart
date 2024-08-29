@@ -41,6 +41,20 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
         .eq('main_category_id', '2')
         .order('id', ascending: true);
 
+    // Stream for categories Gestaltung
+    final streamGestaltungCategory = client
+        .from('subcategories_main_categories')
+        .stream(primaryKey: ['id'])
+        .eq('main_category_id', '3')
+        .order('id', ascending: true);
+
+    // Stream for categories Planung
+    final streamPlanungCategory = client
+        .from('subcategories_main_categories')
+        .stream(primaryKey: ['id'])
+        .eq('main_category_id', '4')
+        .order('id', ascending: true);
+
     return Scaffold(
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,11 +132,8 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                                                           categoryBauteileId,
                                                     },
                                                     controller: controller,
-                                                    // initialValue:
-                                                    //     categoryBauteile?['name'],
                                                     onFieldSubmitted:
                                                         (value) async {
-                                                      //!tutaj wklej kod
                                                       updateSubCategoryBauteile(
                                                           categoryBauteileId,
                                                           value);
@@ -191,9 +202,7 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                                                               .delete_forever_sharp,
                                                           color: Colors.white,
                                                           size: 20),
-                                                      SizedBox(
-                                                          width:
-                                                              5), // Add some space between the icon and the text
+                                                      SizedBox(width: 5),
                                                       const Text('JA'),
                                                     ],
                                                   ),
@@ -247,7 +256,7 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                       });
                     },
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -322,18 +331,13 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                                                     const EdgeInsets.all(8.0),
                                                 child: TextFormField(
                                                   controller: controller,
-                                                  onChanged: (
-                                                    value,
-                                                  ) {
+                                                  onChanged: (value) {
                                                     newSubCategoryName = value;
                                                     categoryId =
                                                         categoryBaustoffeId;
                                                   },
-                                                  // initialValue:
-                                                  //     categoryBauteile?['name'],
                                                   onFieldSubmitted:
                                                       (value) async {
-                                                    //!tutaj wklej kod
                                                     updateSubCategoryBaustoffe(
                                                         categoryBaustoffeId,
                                                         value);
@@ -359,14 +363,13 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                                                         context); // Zamknij dialog
                                                   },
                                                 ),
-                                              )
+                                              ),
                                             ],
                                           );
                                         },
                                       );
                                     },
                                   ),
-                                  //SizedBox(width: 10),
                                   IconButton(
                                     style: ButtonStyle(
                                       foregroundColor:
@@ -404,9 +407,7 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                                                               .delete_forever_sharp,
                                                           color: Colors.white,
                                                           size: 20),
-                                                      SizedBox(
-                                                          width:
-                                                              5), // Add some space between the icon and the text
+                                                      SizedBox(width: 5),
                                                       const Text('JA'),
                                                     ],
                                                   ),
@@ -460,7 +461,410 @@ class _SubCategoriesPageState extends State<SubCategoriesPage> {
                       });
                     },
                   ),
-                )
+                ),
+              ],
+            ),
+          ),
+          VerticalDivider(),
+          //!Column for categories Gestaltung
+          Expanded(
+            child: Column(
+              children: [
+                const Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Gestaltung Categories',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                Divider(),
+                Expanded(
+                  child: StreamBuilder(
+                    stream: streamGestaltungCategory,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final categoriesGestaltung = snapshot.data!;
+
+                      return ListView.builder(
+                        itemCount: categoriesGestaltung?.length,
+                        itemBuilder: (context, index) {
+                          final categoryGestaltung =
+                              categoriesGestaltung[index];
+                          final categoryGestaltungId = categoryGestaltung['id'];
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(0),
+                            ),
+                            color: cardColor,
+                            child: ListTile(
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: buttonColor,
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            final TextEditingController
+                                                controller =
+                                                TextEditingController(
+                                                    text: categoryGestaltung?[
+                                                        'name']);
+                                            return SimpleDialog(
+                                              title: const Text(
+                                                  'Kategorienamen ändern'),
+                                              children: [
+                                                Divider(
+                                                  thickness: 1,
+                                                  color: buttonColor,
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: TextFormField(
+                                                    onChanged: (value) => {
+                                                      newSubCategoryName =
+                                                          value,
+                                                      categoryId =
+                                                          categoryGestaltungId,
+                                                    },
+                                                    controller: controller,
+                                                    onFieldSubmitted:
+                                                        (value) async {
+                                                      updateSubCategoryBauteile(
+                                                          categoryGestaltungId,
+                                                          value);
+
+                                                      if (mounted)
+                                                        Navigator.pop(context);
+                                                      setState(() {});
+                                                    },
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: customButton(
+                                                    text: 'Speichern',
+                                                    onPressed: () async {
+                                                      await updateSubCategoryBauteile(
+                                                          categoryId,
+                                                          newSubCategoryName);
+                                                      setState(
+                                                          () {}); // Upewnij się, że stan jest zaktualizowany
+                                                      Navigator.pop(
+                                                          context); // Zamknij dialog
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          });
+                                    },
+                                  ),
+                                  IconButton(
+                                    style: ButtonStyle(
+                                      foregroundColor:
+                                          MaterialStateProperty.all(Colors.red),
+                                    ),
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () async {
+                                      bool isConfirmed = await showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text('Kategorie löschen'),
+                                            content: Text(
+                                                'Sind Sie sicher, dass Sie löschen möchten ${categoryGestaltung?['name']} Kategorie?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context, false);
+                                                },
+                                                child: Text('NEIN'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(true),
+                                                child: Container(
+                                                  width: 50,
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                          Icons
+                                                              .delete_forever_sharp,
+                                                          color: Colors.white,
+                                                          size: 20),
+                                                      SizedBox(width: 5),
+                                                      const Text('JA'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                style: TextButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.red),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      if (isConfirmed) {
+                                        await deleteSubCategoryBauteile(
+                                            categoryGestaltungId);
+                                        setState(() {
+                                          // ignore: avoid_print
+                                          print('refresh deleted categories');
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                              visualDensity: const VisualDensity(
+                                  horizontal: 0, vertical: -4),
+                              leading: Text((index + 1).toString()),
+                              title: Text(
+                                  categoryGestaltung?['name'].toUpperCase()),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: customButton(
+                    text: 'Unterkategorie hinzufügen',
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return addSubcategoryBauteile();
+                        },
+                      );
+                      setState(() {
+                        // ignore: avoid_print
+                        print('refresh categories');
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          VerticalDivider(),
+          //!Column for categories Planung
+          Expanded(
+            child: Column(
+              children: [
+                const Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Planung Categories',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                Divider(),
+                Expanded(
+                  child: StreamBuilder(
+                    stream: streamPlanungCategory,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final categoriesPlanung = snapshot.data!;
+
+                      return ListView.builder(
+                        itemCount: categoriesPlanung?.length,
+                        itemBuilder: (context, index) {
+                          final categoryPlanung = categoriesPlanung[index];
+                          final categoryPlanungId = categoryPlanung['id'];
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(0),
+                            ),
+                            color: cardColor,
+                            child: ListTile(
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: buttonColor,
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            final TextEditingController
+                                                controller =
+                                                TextEditingController(
+                                                    text: categoryPlanung?[
+                                                        'name']);
+                                            return SimpleDialog(
+                                              title: const Text(
+                                                  'Kategorienamen ändern'),
+                                              children: [
+                                                Divider(
+                                                  thickness: 1,
+                                                  color: buttonColor,
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: TextFormField(
+                                                    onChanged: (value) => {
+                                                      newSubCategoryName =
+                                                          value,
+                                                      categoryId =
+                                                          categoryPlanungId,
+                                                    },
+                                                    controller: controller,
+                                                    onFieldSubmitted:
+                                                        (value) async {
+                                                      updateSubCategoryBauteile(
+                                                          categoryPlanungId,
+                                                          value);
+
+                                                      if (mounted)
+                                                        Navigator.pop(context);
+                                                      setState(() {});
+                                                    },
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: customButton(
+                                                    text: 'Speichern',
+                                                    onPressed: () async {
+                                                      await updateSubCategoryBauteile(
+                                                          categoryId,
+                                                          newSubCategoryName);
+                                                      setState(
+                                                          () {}); // Upewnij się, że stan jest zaktualizowany
+                                                      Navigator.pop(
+                                                          context); // Zamknij dialog
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          });
+                                    },
+                                  ),
+                                  IconButton(
+                                    style: ButtonStyle(
+                                      foregroundColor:
+                                          MaterialStateProperty.all(Colors.red),
+                                    ),
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () async {
+                                      bool isConfirmed = await showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text('Kategorie löschen'),
+                                            content: Text(
+                                                'Sind Sie sicher, dass Sie löschen möchten ${categoryPlanung?['name']} Kategorie?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context, false);
+                                                },
+                                                child: Text('NEIN'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(true),
+                                                child: Container(
+                                                  width: 50,
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                          Icons
+                                                              .delete_forever_sharp,
+                                                          color: Colors.white,
+                                                          size: 20),
+                                                      SizedBox(width: 5),
+                                                      const Text('JA'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                style: TextButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.red),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      if (isConfirmed) {
+                                        await deleteSubCategoryBauteile(
+                                            categoryPlanungId);
+                                        setState(() {
+                                          // ignore: avoid_print
+                                          print('refresh deleted categories');
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                              visualDensity: const VisualDensity(
+                                  horizontal: 0, vertical: -4),
+                              leading: Text((index + 1).toString()),
+                              title:
+                                  Text(categoryPlanung?['name'].toUpperCase()),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: customButton(
+                    text: 'Unterkategorie hinzufügen',
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return addSubcategoryBauteile();
+                        },
+                      );
+                      setState(() {
+                        // ignore: avoid_print
+                        print('refresh categories');
+                      });
+                    },
+                  ),
+                ),
               ],
             ),
           ),

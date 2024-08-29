@@ -19,6 +19,11 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
   int? selectedArticleNormalId;
   int? selectedCompanyId;
 
+  String? categoryAz;
+  String? subcategoryAz;
+  String? categoryNormal;
+  String? subcategoryNormal;
+
   @override
   void initState() {
     super.initState();
@@ -33,13 +38,42 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
 
   Future<void> fetchArticles() async {
     try {
-      final responseAz = await client.from('articles_a_z').select('id, title');
-      final responseNormal = await client.from('articles').select('id, title');
+      final responseAz = await client
+          .from('articles_a_z')
+          .select('id, title, main_categories!inner(name)')
+          .order('title', ascending: true);
+
+      final responseNormal = await client
+          .from('articles')
+          .select('id, title, main_categories!inner(name), '
+              'subcategories_main_categories!inner(name), '
+              'sub_subcategories_main_categories!inner(name)')
+          .order('title', ascending: true);
 
       setState(() {
         articleAzList = responseAz;
         articleNormalList = responseNormal;
       });
+
+      if (selectedArticleAzId != null) {
+        final selectedArticleAz = articleAzList.firstWhere(
+            (article) => article['id'] == selectedArticleAzId,
+            orElse: () => null);
+        if (selectedArticleAz != null) {
+          categoryAz = selectedArticleAz['main_categories']['name'];
+        }
+      }
+
+      if (selectedArticleNormalId != null) {
+        final selectedArticleNormal = articleNormalList.firstWhere(
+            (article) => article['id'] == selectedArticleNormalId,
+            orElse: () => null);
+        if (selectedArticleNormal != null) {
+          categoryNormal = selectedArticleNormal['main_categories']['name'];
+          subcategoryNormal =
+              selectedArticleNormal['subcategories_main_categories']['name'];
+        }
+      }
     } catch (error) {
       print('Error fetching articles: $error');
     }
@@ -60,18 +94,65 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
           selectedArticleNormalId = data['article_normal_id'];
           selectedCompanyId = data['company_id'];
         });
+
+        if (selectedArticleAzId != null) {
+          fetchCategoryAndSubcategory('articles_a_z', selectedArticleAzId!,
+              (category, subcategory, _) {
+            setState(() {
+              categoryAz = category;
+              subcategoryAz = subcategory;
+            });
+          });
+        }
+
+        if (selectedArticleNormalId != null) {
+          fetchCategoryAndSubcategory('articles', selectedArticleNormalId!,
+              (category, subcategory, _) {
+            setState(() {
+              categoryNormal = category;
+              subcategoryNormal = subcategory;
+            });
+          });
+        }
       } else {
-        print('No data found for adId: $adId');
+        print('Keine Daten für adId: $adId gefunden');
       }
     } catch (error) {
-      print('Error fetching ad details: $error');
+      print('Fehler beim Abrufen der Anzeigen-Details: $error');
+    }
+  }
+
+  Future<void> fetchCategoryAndSubcategory(String table, int articleId,
+      Function(String?, String?, String?) onResult) async {
+    try {
+      final response = await client
+          .from(table)
+          .select(
+              'main_categories(name), subcategories_main_categories(name), sub_subcategories_main_categories(name)')
+          .eq('id', articleId)
+          .maybeSingle();
+
+      if (response != null) {
+        final data = response as Map<String, dynamic>;
+        final category = data['main_categories']?['name'] as String?;
+        final subcategory =
+            data['subcategories_main_categories']?['name'] as String?;
+        final subSubcategory =
+            data['sub_subcategories_main_categories']?['name'] as String?;
+        onResult(category, subcategory, subSubcategory);
+      } else {
+        onResult(null, null, null);
+      }
+    } catch (error) {
+      print('Fehler beim Abrufen der Kategorie und Unterkategorie: $error');
+      onResult(null, null, null);
     }
   }
 
   Future<void> saveAd() async {
     try {
       if (selectedCompanyId == null) {
-        print('Wybierz firmę przed zapisaniem reklamy');
+        print('Wählen Sie ein Unternehmen, bevor Sie die Anzeige speichern');
         return;
       }
 
@@ -82,30 +163,51 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
       };
 
       if (widget.adId == null) {
-        // Add new ad
+        // Neue Anzeige hinzufügen
         await client.from('werbung').insert(adData);
       } else {
-        // Edit existing ad
+        // Bestehende Anzeige bearbeiten
         await client.from('werbung').update(adData).eq('id', widget.adId!);
       }
 
       Navigator.pop(context, true);
     } catch (error) {
-      print('Error saving ad: $error');
+      print('Fehler beim Speichern der Anzeige: $error');
     }
   }
 
   Widget buildDropdown(String title, List<dynamic> items, int? selectedItem,
-      void Function(int?) onChanged) {
+      void Function(int?) onChanged,
+      {bool showOnlyCategory = false}) {
+    bool isItemSelected = selectedItem != null;
+
     final dropdownItems = [
       DropdownMenuItem<int>(
         value: null,
-        child: Text('keine Daten'),
+        child: Text('Keine Daten'),
       ),
       ...items.map((item) {
+        String category = item['main_categories']?['name'] ?? 'Keine Kategorie';
+        String subcategory = item['subcategories_main_categories']?['name'] ??
+            'Keine Unterkategorie';
+        String subSubcategory = item['sub_subcategories_main_categories']
+                ?['name'] ??
+            'Keine Sub-Unterkategorie';
+
         return DropdownMenuItem<int>(
           value: item['id'],
-          child: Text(item['title']),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item['title'],
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              if (isItemSelected || !showOnlyCategory)
+                Text(
+                  '$category > $subcategory > $subSubcategory',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+            ],
+          ),
         );
       }).toList(),
     ];
@@ -117,12 +219,35 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         DropdownButtonFormField<int>(
           isExpanded: true,
-          value: dropdownItems.any((item) => item.value == selectedItem)
+          value: selectedItem != null &&
+                  items.any((item) => item['id'] == selectedItem)
               ? selectedItem
               : null,
           items: dropdownItems,
-          onChanged: onChanged,
+          onChanged: (value) {
+            onChanged(value);
+            if (title == 'Wählen Sie einen Artikel von A-Z aus' &&
+                value != null) {
+              fetchCategoryAndSubcategory('articles_a_z', value,
+                  (category, subcategory, subSubcategory) {
+                setState(() {
+                  categoryAz = category;
+                  subcategoryAz = subcategory;
+                });
+              });
+            } else if (title == 'Wählen Sie einen Artikel aus' &&
+                value != null) {
+              fetchCategoryAndSubcategory('articles', value,
+                  (category, subcategory, subSubcategory) {
+                setState(() {
+                  categoryNormal = category;
+                  subcategoryNormal = subcategory;
+                });
+              });
+            }
+          },
           decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(vertical: 10),
             hintText: 'Wählen Sie einen Artikel aus',
           ),
         ),
@@ -132,7 +257,10 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
 
   Widget buildCompanyDropdown() {
     return FutureBuilder(
-      future: client.from('companies').select('id, name'),
+      future: client
+          .from('companies')
+          .select('id, name')
+          .order('name', ascending: true),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
@@ -167,6 +295,30 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
     );
   }
 
+  Widget buildCategoryInfo(String? category, String? subcategory) {
+    if (category == null && subcategory == null) {
+      return SizedBox
+          .shrink(); // Zeigt nichts an, jeśli kategoria i podkategoria są puste
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (category != null)
+          Text(
+            'Kategorie: $category',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        if (subcategory != null)
+          Text(
+            'Unterkategorie: $subcategory',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        SizedBox(height: 8),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -192,7 +344,9 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
               articleAzList,
               selectedArticleAzId,
               (value) => setState(() => selectedArticleAzId = value),
+              showOnlyCategory: true, // Zeigt nur Kategorie an
             ),
+            buildCategoryInfo(categoryAz, subcategoryAz),
             SizedBox(height: 16),
             buildDropdown(
               'Wählen Sie einen Artikel aus',
@@ -200,6 +354,7 @@ class _AddEditAdPageState extends State<AddEditAdPage> {
               selectedArticleNormalId,
               (value) => setState(() => selectedArticleNormalId = value),
             ),
+            buildCategoryInfo(categoryNormal, subcategoryNormal),
             SizedBox(height: 16),
             if (selectedCompanyId != null)
               FutureBuilder(

@@ -22,9 +22,9 @@ class _AddArticlePageState extends State<AddArticlePage> {
     } else if (category == 2) {
       return 'Baustoffe';
     } else if (category == 3) {
-      return 'Planung';
+      return 'Gestaltung';
     } else if (category == 4) {
-      return 'Haustoffe';
+      return 'Planung';
     } else {
       return 'Unbekannt';
     }
@@ -40,7 +40,6 @@ class _AddArticlePageState extends State<AddArticlePage> {
         'main_category_id': selectedCategory
       });
     } catch (error) {
-      // Fehlerbehandlung
       print("Fehler beim Hinzufügen des Artikels: $error");
     }
   }
@@ -162,12 +161,15 @@ class SelectGalleryPage extends StatefulWidget {
 
 class _SelectGalleryPageState extends State<SelectGalleryPage> {
   List<Map<String, dynamic>> galleries = [];
+  List<Map<String, dynamic>> filteredGalleries = [];
   int? selectedGalleryId;
+  TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadGalleries();
+    searchController.addListener(_filterGalleries);
   }
 
   Future<void> _loadGalleries() async {
@@ -178,11 +180,24 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
 
       setState(() {
         galleries = response.cast<Map<String, dynamic>>();
+        galleries.sort((a, b) =>
+            a['name'].compareTo(b['name'])); // Sortowanie alfabetyczne
+        filteredGalleries =
+            galleries; // Początkowe ustawienie filtrowanej listy
       });
     } catch (error) {
-      // Fehlerbehandlung
       print("Fehler beim Laden der Galerien: $error");
     }
+  }
+
+  void _filterGalleries() {
+    setState(() {
+      filteredGalleries = galleries
+          .where((gallery) => gallery['name']
+              .toLowerCase()
+              .contains(searchController.text.toLowerCase()))
+          .toList();
+    });
   }
 
   @override
@@ -195,6 +210,15 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                labelText: 'Galerie suchen',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.search),
+              ),
+            ),
+            SizedBox(height: 16),
             DropdownButton<int>(
               hint: Text('Galerie auswählen'),
               value: selectedGalleryId,
@@ -203,7 +227,7 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
                   selectedGalleryId = newValue;
                 });
               },
-              items: galleries.map((gallery) {
+              items: filteredGalleries.map((gallery) {
                 return DropdownMenuItem<int>(
                   value: gallery['id'],
                   child: Text(gallery['name']),
@@ -237,5 +261,11 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 }

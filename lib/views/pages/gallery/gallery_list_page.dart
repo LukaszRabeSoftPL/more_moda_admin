@@ -4,7 +4,7 @@ import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'add_gallery_page.dart';
-import 'dart:async';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class GalerryListPage extends StatefulWidget {
   const GalerryListPage({super.key});
@@ -18,32 +18,40 @@ class _GalerryListPageState extends State<GalerryListPage> {
   TextEditingController searchController = TextEditingController();
   String searchQuery = '';
   int? selectedCategory;
-  final StreamController<List<Map<String, dynamic>>> _streamController =
-      StreamController();
+
+  static const _pageSize = 300;
+
+  final PagingController<int, Map<String, dynamic>> _pagingController =
+      PagingController(firstPageKey: 0);
 
   @override
   void initState() {
     super.initState();
-    _loadGalerries();
+    _pagingController.addPageRequestListener((pageKey) {
+      _loadGalerries(pageKey);
+    });
   }
 
-  void _loadGalerries() async {
+  Future<void> _loadGalerries(int pageKey) async {
     try {
-      final response =
-          await client.from('galerries').select().order('id', ascending: true);
+      final response = await client
+          .from('galerries')
+          .select()
+          .order('id', ascending: true)
+          .range(pageKey, pageKey + _pageSize - 1);
 
-      // assuming response is a List<Map<String, dynamic>>
-      if (response is List<Map<String, dynamic>>) {
-        _streamController.add(response);
+      final List<Map<String, dynamic>> newItems =
+          List<Map<String, dynamic>>.from(response);
+
+      final isLastPage = newItems.length < _pageSize;
+      if (isLastPage) {
+        _pagingController.appendLastPage(newItems);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unexpected response format')),
-        );
+        final nextPageKey = pageKey + newItems.length;
+        _pagingController.appendPage(newItems, nextPageKey);
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load galleries: $error')),
-      );
+      _pagingController.error = error;
     }
   }
 
@@ -91,7 +99,7 @@ class _GalerryListPageState extends State<GalerryListPage> {
             await client.from('galerries').delete().eq('id', galleryId);
 
         if (response.error == null) {
-          _loadGalerries();
+          _pagingController.refresh();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Gallery deleted successfully')),
           );
@@ -112,7 +120,7 @@ class _GalerryListPageState extends State<GalerryListPage> {
 
   @override
   void dispose() {
-    _streamController.close();
+    _pagingController.dispose();
     super.dispose();
   }
 
@@ -135,7 +143,7 @@ class _GalerryListPageState extends State<GalerryListPage> {
                 );
 
                 if (result == true) {
-                  _loadGalerries();
+                  _pagingController.refresh();
                 }
               },
             ),
@@ -153,119 +161,90 @@ class _GalerryListPageState extends State<GalerryListPage> {
                 setState(() {
                   searchQuery = value;
                 });
+                _pagingController.refresh();
               },
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _streamController.stream,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final allGalleries = snapshot.data!;
-                final filteredGalleries = allGalleries.where((gallery) {
+            child: PagedListView<int, Map<String, dynamic>>(
+              pagingController: _pagingController,
+              builderDelegate: PagedChildBuilderDelegate<Map<String, dynamic>>(
+                itemBuilder: (context, gallery, index) {
                   final galleryName = gallery['name'] ?? '';
-                  return galleryName
-                      .toLowerCase()
-                      .contains(searchQuery.toLowerCase());
-                }).toList();
+                  final galleryId = gallery['id'];
 
-                return ListView.builder(
-                  itemCount: filteredGalleries.length,
-                  itemBuilder: (context, index) {
-                    final gallery = filteredGalleries[index];
-                    final galleryName = gallery['name'] ?? '';
-                    final galleryId = gallery['id'];
-                    final galleryTitle = gallery['title'] ?? '';
-                    final galleryBody = gallery['body'] ?? '';
-
-                    return Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(0),
-                      ),
-                      color: cardColor,
-                      child: ListTile(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => GalleryPhotosPage(
-                                galleryId: galleryId,
-                                galleryName: galleryName,
-                              ),
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0),
+                    ),
+                    color: cardColor,
+                    child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GalleryPhotosPage(
+                              galleryId: galleryId,
+                              galleryName: galleryName,
                             ),
-                          );
-                        },
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.edit),
-                              color: buttonColor,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => GalleryPhotosPage(
-                                      galleryId: galleryId,
-                                      galleryName: galleryName,
-                                    ),
+                          ),
+                        );
+                      },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            color: buttonColor,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GalleryPhotosPage(
+                                    galleryId: galleryId,
+                                    galleryName: galleryName,
                                   ),
-                                );
-                              },
-                            ),
-                            IconButton(
-                              style: ButtonStyle(
-                                foregroundColor:
-                                    MaterialStateProperty.all(Colors.red),
-                              ),
-                              icon: const Icon(Icons.delete),
-                              onPressed: () async {
-                                await _deleteGallery(galleryId, galleryName);
-                              },
-                            ),
-                          ],
-                        ),
-                        visualDensity:
-                            const VisualDensity(horizontal: 0, vertical: -4),
-                        leading: Text((index + 1).toString()),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Text('Name:'),
-                                Row(
-                                  children: [
-                                    Text('Name:'),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      galleryName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                              ],
+                              );
+                            },
+                          ),
+                          IconButton(
+                            style: ButtonStyle(
+                              foregroundColor:
+                                  MaterialStateProperty.all(Colors.red),
                             ),
-                            //Text(galleryBody, softWrap: true, maxLines: 2),
-                          ],
-                        ),
-                        // title: Row(
-                        //   children: [
-                        //     Text(galleryTitle.toUpperCase()),
-                        //   ],
-                        // ),
+                            icon: const Icon(Icons.delete),
+                            onPressed: () async {
+                              await _deleteGallery(galleryId, galleryName);
+                            },
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                );
-              },
+                      visualDensity:
+                          const VisualDensity(horizontal: 0, vertical: -4),
+                      leading: Text((index + 1).toString()),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text('Name:'),
+                              SizedBox(width: 10),
+                              Text(
+                                galleryName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],

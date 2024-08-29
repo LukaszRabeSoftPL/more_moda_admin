@@ -1,5 +1,7 @@
+import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_add_page.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'dart:ui_web' as ui_web; // Update the import as suggested
@@ -17,17 +19,22 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
   int? selectedSubCategory;
   int? selectedSubSubCategory;
   int? selectedGalleryId;
+  int? selectedParentArticleId;
   String selectedGalleryName = '';
+  String selectedParentArticleTitle = '';
   bool isHtmlView = false;
+  bool isSubArticle = false;
 
   List<Map<String, dynamic>> mainCategories = [];
   List<Map<String, dynamic>> subCategories = [];
   List<Map<String, dynamic>> subSubCategories = [];
+  List<Map<String, dynamic>> allArticles = [];
 
   @override
   void initState() {
     super.initState();
     loadMainCategories();
+    loadAllArticles();
   }
 
   Future<void> loadMainCategories() async {
@@ -74,6 +81,18 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
     }
   }
 
+  Future<void> loadAllArticles() async {
+    try {
+      final response = await Supabase.instance.client.from('articles').select(
+          'id, title, main_categories(name), subcategories_main_categories(name), sub_subcategories_main_categories(name)');
+      setState(() {
+        allArticles = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (error) {
+      print('Fehler beim Laden der Artikel: $error');
+    }
+  }
+
   Future<void> addArticle() async {
     try {
       String bodyHtml = bodyController.text;
@@ -84,6 +103,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
         'main_category_id': selectedMainCategory,
         'subcategory_id': selectedSubCategory,
         'sub_subcategory_id': selectedSubSubCategory,
+        'parent_article_id': isSubArticle ? selectedParentArticleId : null,
       });
     } catch (error) {
       print('Fehler beim Hinzufügen des Artikels: $error');
@@ -121,13 +141,23 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
               controller: htmlEditorController,
               htmlEditorOptions: HtmlEditorOptions(
                 hint: 'Dein Text hier...',
-                initialText: currentText, // Ustawienie początkowego tekstu
+                initialText: currentText,
               ),
               htmlToolbarOptions: HtmlToolbarOptions(
                 customToolbarButtons: [
                   GestureDetector(
                     onTap: _selectGallery,
                     child: Icon(Icons.add_box),
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      final imageUrl = await _pickAndUploadImage();
+                      if (imageUrl != null) {
+                        htmlEditorController
+                            .insertHtml('<img src="$imageUrl" alt="Image">');
+                      }
+                    },
+                    child: Icon(Icons.image),
                   ),
                   GestureDetector(
                     onTap: () {
@@ -140,10 +170,12 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                   ),
                 ],
                 defaultToolbarButtons: [
-                  FontButtons(),
+                  FontButtons(), // Dodaje przyciski do zmiany czcionki
+                  FontSettingButtons(), // Dodaje przyciski do ustawień czcionki (rozmiar, marginesy)
                   ColorButtons(),
                   ListButtons(),
                   ParagraphButtons(),
+                  StyleButtons(), // Dodaje style tekstu
                 ],
                 toolbarType: ToolbarType.nativeScrollable,
               ),
@@ -164,6 +196,34 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
         );
       },
     );
+  }
+
+  Future<String?> _pickAndUploadImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return null;
+
+    try {
+      final bytes = await image.readAsBytes();
+      final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final String fileName = '${timestamp}_${image.name}';
+
+      // Przesyłanie pliku do Supabase Storage
+      await Supabase.instance.client.storage
+          .from('images/articles_images')
+          .uploadBinary(fileName, bytes);
+
+      // Pobieranie publicznego URL dla przesłanego obrazu
+      final String imageUrl = Supabase.instance.client.storage
+          .from('images/articles_images')
+          .getPublicUrl(fileName);
+
+      return imageUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
   }
 
   Future<void> showCategoryModal(
@@ -197,6 +257,132 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
               );
             },
           ),
+        );
+      },
+    );
+  }
+
+  Future<void> showArticleModal(
+      BuildContext context,
+      String title,
+      List<Map<String, dynamic>> items,
+      int? selectedItem,
+      void Function(int?) onItemSelected) async {
+    TextEditingController searchController = TextEditingController();
+    String? selectedCategory;
+    List<Map<String, dynamic>> filteredItems = List.from(items);
+
+    void filterArticles(String query, String? category) {
+      setState(() {
+        filteredItems = items.where((article) {
+          final articleTitle = article['title'].toLowerCase();
+          final mainCategory =
+              article['main_categories']?['name']?.toString().toLowerCase() ??
+                  '';
+          final searchText = query.toLowerCase();
+          final categoryFilter = category?.toLowerCase() ?? '';
+
+          bool matchesCategory =
+              categoryFilter.isEmpty || mainCategory.contains(categoryFilter);
+
+          return articleTitle.contains(searchText) && matchesCategory;
+        }).toList();
+      });
+    }
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            searchController.addListener(() {
+              setModalState(() {
+                filterArticles(searchController.text, selectedCategory);
+              });
+            });
+
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(title),
+                leading: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+              body: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: searchController,
+                            decoration: InputDecoration(
+                              labelText: 'Suchen',
+                              border: OutlineInputBorder(),
+                              suffixIcon: Icon(Icons.search),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        DropdownButton<String>(
+                          hint: Text('Kategorie wählen'),
+                          value: selectedCategory,
+                          items: mainCategories.map((category) {
+                            if (category['name'] == null)
+                              return DropdownMenuItem<String>(
+                                  value: null, child: Text('N/A'));
+
+                            return DropdownMenuItem<String>(
+                              value: category['name'],
+                              child: Text(category['name']),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setModalState(() {
+                              selectedCategory = newValue;
+                              filterArticles(
+                                  searchController.text, selectedCategory);
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredItems.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        String mainCategory = filteredItems[index]
+                                ['main_categories']?['name'] ??
+                            'Brak kategorii';
+                        String subCategory = filteredItems[index]
+                                ['subcategories_main_categories']?['name'] ??
+                            'Brak podkategorii';
+                        String subSubCategory = filteredItems[index]
+                                    ['sub_subcategories_main_categories']
+                                ?['name'] ??
+                            'Brak sub-podkategorii';
+
+                        return RadioListTile<int>(
+                          title: Text(filteredItems[index]['title']),
+                          subtitle: Text(
+                              '$mainCategory > $subCategory > $subSubCategory'),
+                          value: filteredItems[index]['id'],
+                          groupValue: selectedItem,
+                          onChanged: (int? value) {
+                            onItemSelected(value);
+                            Navigator.of(context).pop();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -302,6 +488,40 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
               color: Color(0xFF6A93C3).withOpacity(0.5),
             ),
             SizedBox(height: 20),
+            CheckboxListTile(
+              title: Text("Ist das ein Unterartikel?"),
+              value: isSubArticle,
+              onChanged: (bool? value) {
+                setState(() {
+                  isSubArticle = value ?? false;
+                  if (!isSubArticle) {
+                    selectedParentArticleId = null;
+                    selectedParentArticleTitle = '';
+                  }
+                });
+              },
+            ),
+            if (isSubArticle)
+              ElevatedButton(
+                onPressed: () {
+                  showArticleModal(
+                      context,
+                      'Wählen Sie einen übergeordneten Artikel',
+                      allArticles,
+                      selectedParentArticleId, (int? value) {
+                    setState(() {
+                      selectedParentArticleId = value;
+                      selectedParentArticleTitle = allArticles.firstWhere(
+                          (article) => article['id'] == selectedParentArticleId,
+                          orElse: () => {'title': 'N/A'})['title'];
+                    });
+                  });
+                },
+                child: Text(selectedParentArticleId == null
+                    ? 'Übergeordneten Artikel wählen'
+                    : selectedParentArticleTitle),
+              ),
+            SizedBox(height: 20),
             TextField(
               controller: bodyController,
               maxLines: 5,
@@ -319,91 +539,6 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                 await addArticle();
                 Navigator.pop(context, true); // Zwraca true po dodaniu artykułu
               },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SelectGalleryPage extends StatefulWidget {
-  @override
-  _SelectGalleryPageState createState() => _SelectGalleryPageState();
-}
-
-class _SelectGalleryPageState extends State<SelectGalleryPage> {
-  List<Map<String, dynamic>> galleries = [];
-  int? selectedGalleryId;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadGalleries();
-  }
-
-  Future<void> _loadGalleries() async {
-    try {
-      SupabaseClient client = Supabase.instance.client;
-      final List<dynamic> response =
-          await client.from('galerries').select('id, name');
-
-      setState(() {
-        galleries = response.cast<Map<String, dynamic>>();
-      });
-    } catch (error) {
-      // Fehlerbehandlung
-      print("Fehler beim Laden der Galerien: $error");
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Galerie auswählen'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            DropdownButton<int>(
-              hint: Text('Galerie auswählen'),
-              value: selectedGalleryId,
-              onChanged: (int? newValue) {
-                setState(() {
-                  selectedGalleryId = newValue;
-                });
-              },
-              items: galleries.map((gallery) {
-                return DropdownMenuItem<int>(
-                  value: gallery['id'],
-                  child: Text(gallery['name']),
-                );
-              }).toList(),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  child: Text('Abbrechen'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-                TextButton(
-                  child: Text('OK'),
-                  onPressed: () {
-                    if (selectedGalleryId != null) {
-                      Navigator.of(context).pop({
-                        'id': selectedGalleryId,
-                        'name': galleries.firstWhere((gallery) =>
-                            gallery['id'] == selectedGalleryId)['name']
-                      });
-                    }
-                  },
-                ),
-              ],
             ),
           ],
         ),

@@ -2,7 +2,7 @@ import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
-import 'dart:ui_web' as ui_web; // Update the import as suggested
+import 'package:image_picker/image_picker.dart';
 
 class NormalArticleEditPage extends StatefulWidget {
   final Map<String, dynamic> article;
@@ -32,14 +32,22 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
   @override
   void initState() {
     super.initState();
-    titleController = TextEditingController(text: widget.article['title']);
+    titleController =
+        TextEditingController(text: widget.article['title'] ?? '');
     bodyController.text = widget.article['body'] ?? '';
+
     selectedMainCategory = widget.article['main_category_id'];
     selectedSubCategory = widget.article['subcategory_id'];
     selectedSubSubCategory = widget.article['sub_subcategory_id'];
-    loadMainCategories();
-    loadSubCategories(selectedMainCategory!);
-    loadSubSubCategories(selectedSubCategory!);
+
+    if (selectedMainCategory != null) {
+      loadMainCategories();
+      loadSubCategories(selectedMainCategory!);
+    }
+
+    if (selectedSubCategory != null) {
+      loadSubSubCategories(selectedSubCategory!);
+    }
   }
 
   Future<void> loadMainCategories() async {
@@ -115,6 +123,34 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
     }
   }
 
+  Future<String?> _pickAndUploadImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return null;
+
+    try {
+      final bytes = await image.readAsBytes();
+      final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final String fileName = '${timestamp}_${image.name}';
+
+      // Przesyłanie pliku do Supabase Storage
+      await Supabase.instance.client.storage
+          .from('images/articles_images')
+          .uploadBinary(fileName, bytes);
+
+      // Pobieranie publicznego URL dla przesłanego obrazu
+      final String imageUrl = Supabase.instance.client.storage
+          .from('images/articles_images')
+          .getPublicUrl(fileName);
+
+      return imageUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
   void showHtmlEditorDialog() async {
     String currentText = bodyController.text;
     showDialog(
@@ -138,6 +174,16 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                     child: Icon(Icons.add_box),
                   ),
                   GestureDetector(
+                    onTap: () async {
+                      final imageUrl = await _pickAndUploadImage();
+                      if (imageUrl != null) {
+                        htmlEditorController
+                            .insertHtml('<img src="$imageUrl" alt="Image">');
+                      }
+                    },
+                    child: Icon(Icons.image),
+                  ),
+                  GestureDetector(
                     onTap: () {
                       setState(() {
                         isHtmlView = !isHtmlView;
@@ -148,10 +194,12 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                   ),
                 ],
                 defaultToolbarButtons: [
-                  FontButtons(),
+                  FontButtons(), // Dodaje przyciski do zmiany czcionki
+                  FontSettingButtons(), // Dodaje przyciski do ustawień czcionki (rozmiar, marginesy)
                   ColorButtons(),
                   ListButtons(),
                   ParagraphButtons(),
+                  StyleButtons(), // Dodaje style tekstu
                 ],
                 toolbarType: ToolbarType.nativeScrollable,
               ),
@@ -161,7 +209,6 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
             TextButton(
               onPressed: () async {
                 String? updatedText = await htmlEditorController.getText();
-                print('Aktualisierter Text: $updatedText'); // Debugging
                 setState(() {
                   bodyController.text = updatedText ?? '';
                 });
@@ -343,12 +390,15 @@ class SelectGalleryPage extends StatefulWidget {
 
 class _SelectGalleryPageState extends State<SelectGalleryPage> {
   List<Map<String, dynamic>> galleries = [];
+  List<Map<String, dynamic>> filteredGalleries = [];
   int? selectedGalleryId;
+  TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadGalleries();
+    searchController.addListener(_filterGalleries);
   }
 
   Future<void> _loadGalleries() async {
@@ -359,11 +409,24 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
 
       setState(() {
         galleries = response.cast<Map<String, dynamic>>();
+        galleries.sort((a, b) =>
+            a['name'].compareTo(b['name'])); // Sortowanie alfabetyczne
+        filteredGalleries =
+            galleries; // Początkowe ustawienie filtrowanej listy
       });
     } catch (error) {
-      // Fehlerbehandlung
       print("Fehler beim Laden der Galerien: $error");
     }
+  }
+
+  void _filterGalleries() {
+    setState(() {
+      filteredGalleries = galleries
+          .where((gallery) => gallery['name']
+              .toLowerCase()
+              .contains(searchController.text.toLowerCase()))
+          .toList();
+    });
   }
 
   @override
@@ -376,6 +439,15 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                labelText: 'Galerie suchen',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.search),
+              ),
+            ),
+            SizedBox(height: 16),
             DropdownButton<int>(
               hint: Text('Galerie auswählen'),
               value: selectedGalleryId,
@@ -384,7 +456,7 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
                   selectedGalleryId = newValue;
                 });
               },
-              items: galleries.map((gallery) {
+              items: filteredGalleries.map((gallery) {
                 return DropdownMenuItem<int>(
                   value: gallery['id'],
                   child: Text(gallery['name']),
@@ -418,5 +490,11 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 }
