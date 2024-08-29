@@ -34,21 +34,34 @@ class _GalerryListPageState extends State<GalerryListPage> {
 
   Future<void> _loadGalerries(int pageKey) async {
     try {
+      // Pobranie danych z tabeli 'galerries'
       final response = await client
           .from('galerries')
           .select()
           .order('id', ascending: true)
           .range(pageKey, pageKey + _pageSize - 1);
 
-      final List<Map<String, dynamic>> newItems =
+      // Konwersja odpowiedzi do listy (zakładając, że response jest typu dynamic lub podobnego)
+      final List<Map<String, dynamic>> allItems =
           List<Map<String, dynamic>>.from(response);
 
-      final isLastPage = newItems.length < _pageSize;
+      // Filtrowanie wyników na podstawie zapytania wyszukiwania
+      final filteredItems = allItems.where((gallery) {
+        // Konwersja nazwy galerii na małe litery oraz usunięcie białych znaków
+        final galleryName =
+            gallery['name']?.toString()?.toLowerCase().trim() ?? '';
+        // Konwersja zapytania wyszukiwania na małe litery oraz usunięcie białych znaków
+        final searchQueryLower = searchQuery.toLowerCase().trim();
+        // Sprawdzenie, czy nazwa galerii zawiera zapytanie wyszukiwania
+        return galleryName.contains(searchQueryLower);
+      }).toList();
+
+      final isLastPage = filteredItems.length < _pageSize;
       if (isLastPage) {
-        _pagingController.appendLastPage(newItems);
+        _pagingController.appendLastPage(filteredItems);
       } else {
-        final nextPageKey = pageKey + newItems.length;
-        _pagingController.appendPage(newItems, nextPageKey);
+        final nextPageKey = pageKey + filteredItems.length;
+        _pagingController.appendPage(filteredItems, nextPageKey);
       }
     } catch (error) {
       _pagingController.error = error;
