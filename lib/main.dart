@@ -13,7 +13,7 @@ import 'package:get/get.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(); //wait load env
+  await dotenv.load(fileName: ".env"); //wait load env
 
   String supaUri = dotenv.get('SUPABASE_URL'); //get env key
   String supaAnon = dotenv.get('SUPABASE_ANONKEY');

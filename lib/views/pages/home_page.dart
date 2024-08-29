@@ -1,6 +1,9 @@
 import 'package:architect_schwarz_admin/controllers/articles_a_z_controller.dart';
 import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
 import 'package:architect_schwarz_admin/main.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:architect_schwarz_admin/static/static.dart';
 import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_list_page.dart';
 import 'package:architect_schwarz_admin/views/pages/articles_normal/article_list_page.dart';
@@ -26,13 +29,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final PageController pageController = PageController();
   int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-      pageController.jumpToPage(index);
-    });
-  }
+  String versionNumber = dotenv.env['VERSION_NUMBER'] ?? 'Unknown version';
 
   @override
   Widget build(BuildContext context) {
@@ -96,24 +93,38 @@ class _HomePageState extends State<HomePage> {
                       await Supabase.instance.client.auth.signOut();
                       Get.offAll(() => LoginScreen());
                     },
-                    child: Container(
-                      color: Colors.red,
-                      width: double.infinity,
-                      height: 40,
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.logout,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'version number: 1.14.0',
+                            style: TextStyle(
                               color: Colors.white,
+                              fontSize: 10,
                             ),
-                            SizedBox(width: 10),
-                            Text('Ausloggen',
-                                style: TextStyle(color: Colors.white)),
-                          ],
+                          ),
                         ),
-                      ),
+                        Container(
+                          color: Colors.red,
+                          width: double.infinity,
+                          height: 40,
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.logout,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 10),
+                                Text('Ausloggen',
+                                    style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -165,5 +176,12 @@ class _HomePageState extends State<HomePage> {
         onTap: () => _onItemTapped(index),
       ),
     );
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      pageController.jumpToPage(index);
+    });
   }
 }
