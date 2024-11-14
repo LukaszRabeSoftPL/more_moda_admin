@@ -49,7 +49,7 @@ class _GalerryListPageState extends State<GalerryListPage> {
       final filteredItems = allItems.where((gallery) {
         // Konwersja nazwy galerii na małe litery oraz usunięcie białych znaków
         final galleryName =
-            gallery['name']?.toString()?.toLowerCase().trim() ?? '';
+            gallery['name']?.toString().toLowerCase().trim() ?? '';
         // Konwersja zapytania wyszukiwania na małe litery oraz usunięcie białych znaków
         final searchQueryLower = searchQuery.toLowerCase().trim();
         // Sprawdzenie, czy nazwa galerii zawiera zapytanie wyszukiwania

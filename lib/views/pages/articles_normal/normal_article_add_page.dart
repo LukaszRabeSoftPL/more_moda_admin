@@ -168,14 +168,24 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                     },
                     child: Icon(isHtmlView ? Icons.code_off : Icons.code),
                   ),
+                  // Dodanie przycisków do obsługi tabel
+                  GestureDetector(
+                    onTap: () {
+                      htmlEditorController.insertHtml(
+                        '<table border="1"><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Data 1</td><td>Data 2</td></tr></table>',
+                      );
+                    },
+                    child: Icon(Icons.table_chart),
+                  ),
                 ],
                 defaultToolbarButtons: [
-                  FontButtons(), // Dodaje przyciski do zmiany czcionki
-                  FontSettingButtons(), // Dodaje przyciski do ustawień czcionki (rozmiar, marginesy)
+                  FontButtons(),
+                  FontSettingButtons(),
                   ColorButtons(),
                   ListButtons(),
                   ParagraphButtons(),
-                  StyleButtons(), // Dodaje style tekstu
+                  StyleButtons(),
+                  // Opcjonalnie możesz dodać więcej przycisków, jeśli edytor je wspiera
                 ],
                 toolbarType: ToolbarType.nativeScrollable,
               ),

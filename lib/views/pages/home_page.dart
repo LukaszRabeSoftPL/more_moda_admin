@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            'version number: 1.14.0',
+                            'version number: 1.15.0',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
