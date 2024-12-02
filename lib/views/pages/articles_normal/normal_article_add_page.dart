@@ -145,37 +145,43 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
               ),
               htmlToolbarOptions: HtmlToolbarOptions(
                 customToolbarButtons: [
-                  GestureDetector(
-                    onTap: _selectGallery,
-                    child: Icon(Icons.add_box),
-                  ),
-                  GestureDetector(
-                    onTap: () async {
-                      final imageUrl = await _pickAndUploadImage();
-                      if (imageUrl != null) {
-                        htmlEditorController
-                            .insertHtml('<img src="$imageUrl" alt="Image">');
-                      }
-                    },
-                    child: Icon(Icons.image),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isHtmlView = !isHtmlView;
-                      });
-                      htmlEditorController.toggleCodeView();
-                    },
-                    child: Icon(isHtmlView ? Icons.code_off : Icons.code),
-                  ),
-                  // Dodanie przycisków do obsługi tabel
-                  GestureDetector(
-                    onTap: () {
-                      htmlEditorController.insertHtml(
-                        '<table border="1"><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Data 1</td><td>Data 2</td></tr></table>',
-                      );
-                    },
-                    child: Icon(Icons.table_chart),
+                  Wrap(
+                    spacing: 8.0, // Odległość między elementami
+                    runSpacing: 4.0, // Odległość między liniami
+                    alignment: WrapAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: _selectGallery,
+                        child: Icon(Icons.add_box),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          final imageUrl = await _pickAndUploadImage();
+                          if (imageUrl != null) {
+                            htmlEditorController.insertHtml(
+                                '<img src="$imageUrl" alt="Image">');
+                          }
+                        },
+                        child: Icon(Icons.image),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isHtmlView = !isHtmlView;
+                          });
+                          htmlEditorController.toggleCodeView();
+                        },
+                        child: Icon(isHtmlView ? Icons.code_off : Icons.code),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          htmlEditorController.insertHtml(
+                            '<table border="1"><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Data 1</td><td>Data 2</td></tr></table>',
+                          );
+                        },
+                        child: Icon(Icons.table_chart),
+                      ),
+                    ],
                   ),
                 ],
                 defaultToolbarButtons: [
@@ -187,7 +193,7 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                   StyleButtons(),
                   // Opcjonalnie możesz dodać więcej przycisków, jeśli edytor je wspiera
                 ],
-                toolbarType: ToolbarType.nativeScrollable,
+                toolbarType: ToolbarType.nativeGrid,
               ),
             ),
           ),

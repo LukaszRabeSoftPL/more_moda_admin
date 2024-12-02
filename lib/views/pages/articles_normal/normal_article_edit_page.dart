@@ -211,7 +211,7 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                   StyleButtons(),
                   // Opcjonalnie możesz dodać więcej przycisków, jeśli edytor je wspiera
                 ],
-                toolbarType: ToolbarType.nativeScrollable,
+                toolbarType: ToolbarType.nativeGrid,
               ),
             ),
           ),
