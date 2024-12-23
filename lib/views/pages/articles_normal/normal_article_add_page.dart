@@ -1,5 +1,6 @@
 import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_add_page.dart';
 import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -93,6 +94,37 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
     }
   }
 
+  Future<String?> _pickAndUploadPDF() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'], // Restrict to PDF files
+      );
+
+      if (result == null || result.files.single.bytes == null) {
+        return null; // User canceled or no file selected
+      }
+
+      final bytes = result.files.single.bytes!;
+      final String fileName = result.files.single.name;
+
+      // Upload the PDF to Supabase Storage
+      await Supabase.instance.client.storage
+          .from('images/articles_images')
+          .uploadBinary(fileName, bytes);
+
+      // Get the public URL for the uploaded PDF
+      final String pdfUrl = Supabase.instance.client.storage
+          .from('images/articles_images')
+          .getPublicUrl(fileName);
+
+      return pdfUrl;
+    } catch (e) {
+      print('Error selecting or uploading PDF: $e');
+      return null;
+    }
+  }
+
   Future<void> addArticle() async {
     try {
       String bodyHtml = bodyController.text;
@@ -163,6 +195,17 @@ class _NormalArticleAddPageState extends State<NormalArticleAddPage> {
                           }
                         },
                         child: Icon(Icons.image),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          final pdfUrl = await _pickAndUploadPDF();
+                          if (pdfUrl != null) {
+                            htmlEditorController.insertHtml(
+                              '<a href="$pdfUrl" target="_blank">Pobierz PDF</a>',
+                            );
+                          }
+                        },
+                        child: Icon(Icons.picture_as_pdf),
                       ),
                       GestureDetector(
                         onTap: () {

@@ -46,6 +46,7 @@ dependencies:
   infinite_scroll_pagination: ^4.0.0
   dropdown_search: ^6.0.1
   package_info_plus: ^8.0.2
+  file_picker: ^8.1.6
   
 
 dev_dependencies:
