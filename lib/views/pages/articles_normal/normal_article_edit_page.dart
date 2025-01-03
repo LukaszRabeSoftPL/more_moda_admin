@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart'; // Add intl package to use DateFormat
 
 class NormalArticleEditPage extends StatefulWidget {
   final Map<String, dynamic> article;
@@ -63,16 +64,25 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
       }
 
       final bytes = result.files.single.bytes!;
-      final String fileName = result.files.single.name;
+      String fileName = result.files.single.name;
+
+      // Add a unique date tag to the file name
+      final String timestamp =
+          DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+      final List<String> nameParts = fileName.split('.');
+      fileName = '${nameParts[0]}_$timestamp.${nameParts.last}';
+
+      // Define bucket name
+      final String bucketName = 'images/pdf';
 
       // Upload the PDF to Supabase Storage
       await Supabase.instance.client.storage
-          .from('images/articles_images')
+          .from(bucketName)
           .uploadBinary(fileName, bytes);
 
       // Get the public URL for the uploaded PDF
       final String pdfUrl = Supabase.instance.client.storage
-          .from('images/articles_images')
+          .from(bucketName)
           .getPublicUrl(fileName);
 
       return pdfUrl;
@@ -220,7 +230,7 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                       final pdfUrl = await _pickAndUploadPDF();
                       if (pdfUrl != null) {
                         htmlEditorController.insertHtml(
-                          '<a href="$pdfUrl" target="_blank">Pobierz PDF</a>',
+                          '<a href="$pdfUrl" target="_blank">PDF herunterladen</a>',
                         );
                       }
                     },
