@@ -31,7 +31,8 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
   int? selectedGalleryId;
   String selectedGalleryName = '';
   bool isHtmlView = false;
-
+  bool _listenerAdded = false;
+  bool _isRemoving = false;
   List<Map<String, dynamic>> mainCategories = [];
   List<Map<String, dynamic>> subCategories = [];
   List<Map<String, dynamic>> subSubCategories = [];
@@ -57,51 +58,49 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
       loadSubSubCategories(selectedSubCategory!);
     }
 
-    if (kIsWeb) {
+    // Web only - dodajemy listener tylko raz
+    if (kIsWeb && !_listenerAdded) {
+      _listenerAdded = true;
+
       html.window.onMessage.listen((event) async {
+        if (_isRemoving) return;
+
         final data = event.data;
         if (data is Map && data['type'] == 'popupClicked') {
           final clickedText = data['value'];
 
-          setState(() {
-            _hideEditor = true;
-          });
-          await Future.delayed(Duration(milliseconds: 100));
+          debugPrint('[DEBUG] Otrzymano kliknięcie popup: "$clickedText"');
 
-          final shouldRemove = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Usuń powiązanie'),
-              content: Text('Czy chcesz usunąć galerię "$clickedText"?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text('Anuluj'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text('Usuń'),
-                ),
-              ],
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Kliknięto galerię: "$clickedText"'),
+              duration: Duration(seconds: 6),
+              action: SnackBarAction(
+                label: 'Usuń powiązanie',
+                onPressed: () async {
+                  final htmlText = await htmlEditorController.getText();
+                  debugPrint('[DEBUG] HTML przed usunięciem: $htmlText');
+                  final updated = htmlText.replaceAllMapped(
+                    RegExp(r'<popup[^>]*id="(\d+)"[^>]*>(.*?)<\/popup>',
+                        caseSensitive: false),
+                    (match) {
+                      final tagId = match.group(1);
+                      final content = match.group(2)?.trim();
+                      debugPrint('[DEBUG] Match id: \$tagId');
+                      debugPrint('[DEBUG] Match content: \$content');
+                      if (content == clickedText.trim()) {
+                        return content!;
+                      }
+                      return match.group(0)!;
+                    },
+                  );
+                  debugPrint('[DEBUG] HTML po usunięciu: $updated');
+                  htmlEditorController.setText(updated);
+                },
+              ),
             ),
           );
-
-          await Future.delayed(Duration(milliseconds: 100));
-          setState(() {
-            _hideEditor = false;
-          });
-
-          if (shouldRemove == true) {
-            final htmlText = await htmlEditorController.getText();
-            final regex = RegExp(
-              r'<span class="popup-gallery" data-id="\d+">' +
-                  RegExp.escape(clickedText) +
-                  r'<\/span>',
-              caseSensitive: false,
-            );
-            final updated = htmlText.replaceFirst(regex, clickedText);
-            htmlEditorController.setText(updated);
-          }
         }
       });
     }
@@ -299,15 +298,9 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
   }
 
   String _wrapWithPopupStyleAndJS(String html) {
-    final transformedHtml = html.replaceAllMapped(
-      RegExp(r'<popup id="(\d+)">(.*?)<\/popup>', caseSensitive: false),
-      (match) =>
-          '<span class="popup-gallery" data-id="${match.group(1)}">${match.group(2)}</span>',
-    );
-
     return '''
     <style>
-      .popup-gallery {
+      popup {
         color: blue !important;
         text-decoration: underline !important;
         cursor: pointer;
@@ -315,17 +308,18 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
     </style>
    <script>
   setTimeout(function() {
-    document.querySelectorAll(".popup-gallery").forEach(function(el) {
+    document.querySelectorAll("popup").forEach(function(el) {
       el.style.cursor = "pointer";
       el.onclick = function(e) {
         const content = el.innerText;
+        console.log('[JS] popup clicked:', content);
         window.parent.postMessage({ type: 'popupClicked', value: content }, '*');
       };
     });
   }, 500);
 </script>
 
-    $transformedHtml
+    $html
   ''';
   }
 
