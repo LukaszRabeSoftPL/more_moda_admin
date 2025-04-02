@@ -9,6 +9,8 @@ import 'package:intl/intl.dart'; // Add intl package to use DateFormat
 import 'dart:html' as html; // tylko jeśli `kIsWeb`
 import 'package:flutter/foundation.dart'; // dla kIsWeb
 
+bool _hideEditor = false;
+
 class NormalArticleEditPage extends StatefulWidget {
   final Map<String, dynamic> article;
 
@@ -55,12 +57,16 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
       loadSubSubCategories(selectedSubCategory!);
     }
 
-    // Web only: nasłuchiwanie wiadomości z edytora
     if (kIsWeb) {
       html.window.onMessage.listen((event) async {
         final data = event.data;
         if (data is Map && data['type'] == 'popupClicked') {
           final clickedText = data['value'];
+
+          setState(() {
+            _hideEditor = true;
+          });
+          await Future.delayed(Duration(milliseconds: 100));
 
           final shouldRemove = await showDialog<bool>(
             context: context,
@@ -69,14 +75,22 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
               content: Text('Czy chcesz usunąć galerię "$clickedText"?'),
               actions: [
                 TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text('Anuluj')),
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Anuluj'),
+                ),
                 TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text('Usuń')),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('Usuń'),
+                ),
               ],
             ),
           );
+
+          await Future.delayed(Duration(milliseconds: 100));
+          setState(() {
+            _hideEditor = false;
+          });
+
           if (shouldRemove == true) {
             final htmlText = await htmlEditorController.getText();
             final regex = RegExp(
@@ -345,94 +359,117 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
 
   void showHtmlEditorDialog() async {
     String currentText = bodyController.text;
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Artikel bearbeiten'),
-          content: Container(
-            width: double.maxFinite,
-            height: 400,
-            child: HtmlEditor(
-              controller: htmlEditorController,
-              htmlEditorOptions: HtmlEditorOptions(
-                hint: 'Dein Text hier...',
-                initialText: _wrapWithPopupStyleAndJS(currentText),
-              ),
-              htmlToolbarOptions: HtmlToolbarOptions(
-                customToolbarButtons: [
-                  GestureDetector(
-                    onTap: _selectGallery,
-                    child: Icon(Icons.add_box),
+      barrierDismissible: true,
+      barrierLabel: 'Edytor',
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: Material(
+            color: Colors.white,
+            elevation: 8,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 800,
+              height: 600,
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text('Artikel bearbeiten',
+                      style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: HtmlEditor(
+                      controller: htmlEditorController,
+                      htmlEditorOptions: HtmlEditorOptions(
+                        hint: 'Dein Text hier...',
+                        initialText: _wrapWithPopupStyleAndJS(currentText),
+                      ),
+                      htmlToolbarOptions: HtmlToolbarOptions(
+                        customToolbarButtons: [
+                          GestureDetector(
+                            onTap: _selectGallery,
+                            child: Icon(Icons.add_box),
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              final imageUrl = await _pickAndUploadImage();
+                              if (imageUrl != null) {
+                                htmlEditorController.insertHtml(
+                                    '<img src="$imageUrl" alt="Image">');
+                              }
+                            },
+                            child: Icon(Icons.image),
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              final pdfUrl = await _pickAndUploadPDF();
+                              if (pdfUrl != null) {
+                                htmlEditorController.insertHtml(
+                                  '<a href="$pdfUrl" target="_blank">PDF herunterladen</a>',
+                                );
+                              }
+                            },
+                            child: Icon(Icons.picture_as_pdf),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isHtmlView = !isHtmlView;
+                              });
+                              htmlEditorController.toggleCodeView();
+                            },
+                            child:
+                                Icon(isHtmlView ? Icons.code_off : Icons.code),
+                          ),
+                          GestureDetector(
+                            onTap: _removeSelectedPopup,
+                            child: Icon(Icons.link_off),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              htmlEditorController.insertHtml(
+                                '<table border="1"><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Data 1</td><td>Data 2</td></tr></table>',
+                              );
+                            },
+                            child: Icon(Icons.table_chart),
+                          ),
+                        ],
+                        defaultToolbarButtons: [
+                          FontButtons(),
+                          FontSettingButtons(),
+                          ColorButtons(),
+                          ListButtons(),
+                          ParagraphButtons(),
+                          StyleButtons(),
+                        ],
+                        toolbarType: ToolbarType.nativeGrid,
+                      ),
+                    ),
                   ),
-                  GestureDetector(
-                    onTap: () async {
-                      final imageUrl = await _pickAndUploadImage();
-                      if (imageUrl != null) {
-                        htmlEditorController
-                            .insertHtml('<img src="$imageUrl" alt="Image">');
-                      }
-                    },
-                    child: Icon(Icons.image),
-                  ),
-                  GestureDetector(
-                    onTap: () async {
-                      final pdfUrl = await _pickAndUploadPDF();
-                      if (pdfUrl != null) {
-                        htmlEditorController.insertHtml(
-                          '<a href="$pdfUrl" target="_blank">PDF herunterladen</a>',
-                        );
-                      }
-                    },
-                    child: Icon(Icons.picture_as_pdf),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isHtmlView = !isHtmlView;
-                      });
-                      htmlEditorController.toggleCodeView();
-                    },
-                    child: Icon(isHtmlView ? Icons.code_off : Icons.code),
-                  ),
-                  GestureDetector(
-                    onTap: _removeSelectedPopup,
-                    child: Icon(Icons.link_off),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      htmlEditorController.insertHtml(
-                        '<table border="1"><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Data 1</td><td>Data 2</td></tr></table>',
-                      );
-                    },
-                    child: Icon(Icons.table_chart),
-                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () async {
+                          String? editedText =
+                              await htmlEditorController.getText();
+                          String cleanedText =
+                              _removeStyleTag(editedText ?? '');
+                          setState(() {
+                            bodyController.text = cleanedText;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Speichern'),
+                      ),
+                    ],
+                  )
                 ],
-                defaultToolbarButtons: [
-                  FontButtons(),
-                  FontSettingButtons(),
-                  ColorButtons(),
-                  ListButtons(),
-                  ParagraphButtons(),
-                  StyleButtons(),
-                ],
-                toolbarType: ToolbarType.nativeGrid,
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                String? editedText = await htmlEditorController.getText();
-                String cleanedText = _removeStyleTag(editedText ?? '');
-                setState(() {
-                  bodyController.text = cleanedText;
-                });
-                Navigator.of(context).pop();
-              },
-              child: Text('Speichern'),
-            ),
-          ],
         );
       },
     );
@@ -491,10 +528,11 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                     controller: titleController,
                     decoration: InputDecoration(
                       enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                        color: Colors.grey,
-                        width: 1.0,
-                      )),
+                        borderSide: BorderSide(
+                          color: Colors.grey,
+                          width: 1.0,
+                        ),
+                      ),
                       labelText: 'Titel',
                       border: OutlineInputBorder(),
                     ),
@@ -503,19 +541,25 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                 SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: () {
-                    showCategoryModal(context, 'Kategorie wählen',
-                        mainCategories, selectedMainCategory, (int? value) {
-                      setState(() {
-                        selectedMainCategory = value;
-                        loadSubCategories(value!);
-                      });
-                    });
+                    showCategoryModal(
+                      context,
+                      'Kategorie wählen',
+                      mainCategories,
+                      selectedMainCategory,
+                      (int? value) {
+                        setState(() {
+                          selectedMainCategory = value;
+                          loadSubCategories(value!);
+                        });
+                      },
+                    );
                   },
                   child: Text(selectedMainCategory == null
                       ? 'Kategorie wählen'
                       : mainCategories.firstWhere(
                           (category) => category['id'] == selectedMainCategory,
-                          orElse: () => {'name': 'N/A'})['name']),
+                          orElse: () => {'name': 'N/A'},
+                        )['name']),
                 ),
               ],
             ),
@@ -525,13 +569,18 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        showCategoryModal(context, 'Unterkategorie wählen',
-                            subCategories, selectedSubCategory, (int? value) {
-                          setState(() {
-                            selectedSubCategory = value;
-                            loadSubSubCategories(value!);
-                          });
-                        });
+                        showCategoryModal(
+                          context,
+                          'Unterkategorie wählen',
+                          subCategories,
+                          selectedSubCategory,
+                          (int? value) {
+                            setState(() {
+                              selectedSubCategory = value;
+                              loadSubSubCategories(value!);
+                            });
+                          },
+                        );
                       },
                       child: Text(selectedSubCategory == null
                           ? 'Unterkategorie wählen'
@@ -539,7 +588,8 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                               ? subCategories.firstWhere(
                                   (category) =>
                                       category['id'] == selectedSubCategory,
-                                  orElse: () => {'name': 'N/A'})['name']
+                                  orElse: () => {'name': 'N/A'},
+                                )['name']
                               : 'Unterkategorie wählen'),
                     ),
                   ),
@@ -548,14 +598,16 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                     child: ElevatedButton(
                       onPressed: () {
                         showCategoryModal(
-                            context,
-                            'Sub-Unterkategorie wählen',
-                            subSubCategories,
-                            selectedSubSubCategory, (int? value) {
-                          setState(() {
-                            selectedSubSubCategory = value;
-                          });
-                        });
+                          context,
+                          'Sub-Unterkategorie wählen',
+                          subSubCategories,
+                          selectedSubSubCategory,
+                          (int? value) {
+                            setState(() {
+                              selectedSubSubCategory = value;
+                            });
+                          },
+                        );
                       },
                       child: Text(selectedSubSubCategory == null
                           ? 'Sub-Unterkategorie wählen'
@@ -563,7 +615,8 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                               ? subSubCategories.firstWhere(
                                   (category) =>
                                       category['id'] == selectedSubSubCategory,
-                                  orElse: () => {'name': 'N/A'})['name']
+                                  orElse: () => {'name': 'N/A'},
+                                )['name']
                               : 'Sub-Unterkategorie wählen'),
                     ),
                   ),
@@ -573,24 +626,92 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
               thickness: 1,
               color: Color(0xFF6A93C3).withOpacity(0.5),
             ),
-            SizedBox(height: 20),
-            TextField(
-              controller: bodyController,
-              maxLines: 5,
-              decoration: InputDecoration(
-                labelText: 'Text',
-                border: OutlineInputBorder(),
+            const SizedBox(height: 20),
+            Expanded(
+              child: HtmlEditor(
+                controller: htmlEditorController,
+                htmlEditorOptions: HtmlEditorOptions(
+                  hint: 'Dein Text hier...',
+                  initialText: _wrapWithPopupStyleAndJS(bodyController.text),
+                ),
+                htmlToolbarOptions: HtmlToolbarOptions(
+                  customToolbarButtons: [
+                    GestureDetector(
+                      onTap: _selectGallery,
+                      child: Icon(Icons.add_box),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        final imageUrl = await _pickAndUploadImage();
+                        if (imageUrl != null) {
+                          htmlEditorController
+                              .insertHtml('<img src="$imageUrl" alt="Image">');
+                        }
+                      },
+                      child: Icon(Icons.image),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        final pdfUrl = await _pickAndUploadPDF();
+                        if (pdfUrl != null) {
+                          htmlEditorController.insertHtml(
+                            '<a href="$pdfUrl" target="_blank">PDF herunterladen</a>',
+                          );
+                        }
+                      },
+                      child: Icon(Icons.picture_as_pdf),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isHtmlView = !isHtmlView;
+                        });
+                        htmlEditorController.toggleCodeView();
+                      },
+                      child: Icon(isHtmlView ? Icons.code_off : Icons.code),
+                    ),
+                    GestureDetector(
+                      onTap: _removeSelectedPopup,
+                      child: Icon(Icons.link_off),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        htmlEditorController.insertHtml(
+                          '<table border="1"><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Data 1</td><td>Data 2</td></tr></table>',
+                        );
+                      },
+                      child: Icon(Icons.table_chart),
+                    ),
+                  ],
+                  defaultToolbarButtons: [
+                    FontButtons(),
+                    FontSettingButtons(),
+                    ColorButtons(),
+                    ListButtons(),
+                    ParagraphButtons(),
+                    StyleButtons(),
+                  ],
+                  toolbarType: ToolbarType.nativeGrid,
+                ),
               ),
-              readOnly: true,
-              onTap: showHtmlEditorDialog,
             ),
-            SizedBox(height: 16),
-            customButton(
-              text: 'Speichern',
-              onPressed: () async {
-                await updateArticle();
-                Navigator.pop(context, true); // Zwraca true po zapisaniu zmian
-              },
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                customButton(
+                  text: 'Speichern',
+                  onPressed: () async {
+                    String? editedText = await htmlEditorController.getText();
+                    String cleanedText = _removeStyleTag(editedText ?? '');
+                    setState(() {
+                      bodyController.text = cleanedText;
+                    });
+                    await updateArticle();
+                    Navigator.pop(context, true);
+                  },
+                ),
+              ],
             ),
           ],
         ),
