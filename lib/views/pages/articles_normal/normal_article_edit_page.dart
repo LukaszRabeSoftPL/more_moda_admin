@@ -215,6 +215,7 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                     onTap: _selectGallery,
                     child: Icon(Icons.add_box),
                   ),
+
                   GestureDetector(
                     onTap: () async {
                       final imageUrl = await _pickAndUploadImage();
