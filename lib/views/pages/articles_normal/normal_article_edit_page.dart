@@ -5,6 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart'; // Add intl package to use DateFormat
+// ignore: deprecated_member_use
+import 'dart:html' as html; // tylko jeśli `kIsWeb`
+import 'package:flutter/foundation.dart'; // dla kIsWeb
 
 class NormalArticleEditPage extends StatefulWidget {
   final Map<String, dynamic> article;
@@ -34,6 +37,7 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
   @override
   void initState() {
     super.initState();
+
     titleController =
         TextEditingController(text: widget.article['title'] ?? '');
     bodyController.text = widget.article['body'] ?? '';
@@ -49,6 +53,121 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
 
     if (selectedSubCategory != null) {
       loadSubSubCategories(selectedSubCategory!);
+    }
+
+    // Web only: nasłuchiwanie wiadomości z edytora
+    if (kIsWeb) {
+      html.window.onMessage.listen((event) async {
+        final data = event.data;
+        if (data is Map && data['type'] == 'popupClicked') {
+          final clickedText = data['value'];
+
+          final shouldRemove = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Usuń powiązanie'),
+              content: Text('Czy chcesz usunąć galerię "$clickedText"?'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text('Anuluj')),
+                TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text('Usuń')),
+              ],
+            ),
+          );
+          if (shouldRemove == true) {
+            final htmlText = await htmlEditorController.getText();
+            final regex = RegExp(
+              r'<span class="popup-gallery" data-id="\d+">' +
+                  RegExp.escape(clickedText) +
+                  r'<\/span>',
+              caseSensitive: false,
+            );
+            final updated = htmlText.replaceFirst(regex, clickedText);
+            htmlEditorController.setText(updated);
+          }
+        }
+      });
+    }
+  }
+
+  String _wrapWithPopupStyle(String html) {
+    return '''
+  <style>
+    popup {
+      color: blue !important;
+      text-decoration: underline !important;
+      cursor: pointer;
+    }
+  </style>
+  $html
+  ''';
+  }
+
+  String _removeStyleTag(String html) {
+    return html
+        .replaceFirst(
+          RegExp(r'<style[^>]*>.*?<\/style>', dotAll: true),
+          '',
+        )
+        .replaceFirst(
+          RegExp(r'<script[^>]*>.*?<\/script>', dotAll: true),
+          '',
+        );
+  }
+
+  void _removeSelectedPopup() async {
+    final text = await htmlEditorController.getText();
+    final popupRegex =
+        RegExp(r'<popup[^>]*>(.*?)<\/popup>', caseSensitive: false);
+    final updated =
+        text.replaceFirstMapped(popupRegex, (match) => match.group(1)!);
+    htmlEditorController.setText(updated);
+  }
+
+  Future<void> showPopupLinkManager() async {
+    final html = bodyController.text;
+
+    final matches = RegExp(r'.{0,30}<popup[^>]*>(.*?)<\/popup>.{0,30}',
+            caseSensitive: false)
+        .allMatches(html)
+        .map((m) => m.group(0) ?? '')
+        .toList();
+
+    if (matches.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Brak galerii do usunięcia.')));
+      return;
+    }
+
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Wybierz galerię do usunięcia'),
+        children: matches.map((fragment) {
+          return SimpleDialogOption(
+            child: Text(fragment.replaceAll(RegExp(r'<[^>]+>'), ''),
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+            onPressed: () => Navigator.pop(context, fragment),
+          );
+        }).toList(),
+      ),
+    );
+
+    if (selected != null) {
+      final cleanText = selected.replaceAll(
+          RegExp(r'.*<popup[^>]*>(.*?)<\/popup>.*', caseSensitive: false),
+          r'$1');
+      final updatedHtml = html.replaceFirst(
+        RegExp(r'<popup[^>]*>(' + RegExp.escape(cleanText) + r')<\/popup>',
+            caseSensitive: false),
+        cleanText,
+      );
+      setState(() {
+        bodyController.text = updatedHtml;
+      });
     }
   }
 
@@ -165,6 +284,37 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
     }
   }
 
+  String _wrapWithPopupStyleAndJS(String html) {
+    final transformedHtml = html.replaceAllMapped(
+      RegExp(r'<popup id="(\d+)">(.*?)<\/popup>', caseSensitive: false),
+      (match) =>
+          '<span class="popup-gallery" data-id="${match.group(1)}">${match.group(2)}</span>',
+    );
+
+    return '''
+    <style>
+      .popup-gallery {
+        color: blue !important;
+        text-decoration: underline !important;
+        cursor: pointer;
+      }
+    </style>
+   <script>
+  setTimeout(function() {
+    document.querySelectorAll(".popup-gallery").forEach(function(el) {
+      el.style.cursor = "pointer";
+      el.onclick = function(e) {
+        const content = el.innerText;
+        window.parent.postMessage({ type: 'popupClicked', value: content }, '*');
+      };
+    });
+  }, 500);
+</script>
+
+    $transformedHtml
+  ''';
+  }
+
   Future<String?> _pickAndUploadImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -207,7 +357,7 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
               controller: htmlEditorController,
               htmlEditorOptions: HtmlEditorOptions(
                 hint: 'Dein Text hier...',
-                initialText: currentText,
+                initialText: _wrapWithPopupStyleAndJS(currentText),
               ),
               htmlToolbarOptions: HtmlToolbarOptions(
                 customToolbarButtons: [
@@ -215,7 +365,6 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                     onTap: _selectGallery,
                     child: Icon(Icons.add_box),
                   ),
-
                   GestureDetector(
                     onTap: () async {
                       final imageUrl = await _pickAndUploadImage();
@@ -246,7 +395,10 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                     },
                     child: Icon(isHtmlView ? Icons.code_off : Icons.code),
                   ),
-                  // Dodanie przycisków do obsługi tabel
+                  GestureDetector(
+                    onTap: _removeSelectedPopup,
+                    child: Icon(Icons.link_off),
+                  ),
                   GestureDetector(
                     onTap: () {
                       htmlEditorController.insertHtml(
@@ -263,7 +415,6 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
                   ListButtons(),
                   ParagraphButtons(),
                   StyleButtons(),
-                  // Opcjonalnie możesz dodać więcej przycisków, jeśli edytor je wspiera
                 ],
                 toolbarType: ToolbarType.nativeGrid,
               ),
@@ -272,9 +423,10 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
           actions: [
             TextButton(
               onPressed: () async {
-                String? updatedText = await htmlEditorController.getText();
+                String? editedText = await htmlEditorController.getText();
+                String cleanedText = _removeStyleTag(editedText ?? '');
                 setState(() {
-                  bodyController.text = updatedText ?? '';
+                  bodyController.text = cleanedText;
                 });
                 Navigator.of(context).pop();
               },
@@ -462,6 +614,7 @@ class _SelectGalleryPageState extends State<SelectGalleryPage> {
   void initState() {
     super.initState();
     _loadGalleries();
+
     searchController.addListener(_filterGalleries);
   }
 
