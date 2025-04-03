@@ -68,33 +68,38 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
         final data = event.data;
         if (data is Map && data['type'] == 'popupClicked') {
           final clickedText = data['value'];
+          final outerHtml = data['outer'];
+          final before = data['contextBefore'] ?? '';
+          final after = data['contextAfter'] ?? '';
 
           debugPrint('[DEBUG] Otrzymano kliknięcie popup: "$clickedText"');
+          debugPrint('[DEBUG] Outer HTML: $outerHtml');
 
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Kliknięto galerię: "$clickedText"'),
+              content: Text('Galerie: "$clickedText"'),
               duration: Duration(seconds: 6),
               action: SnackBarAction(
-                label: 'Usuń powiązanie',
+                label: 'Link entfernen',
+                textColor: Colors.white,
+                backgroundColor: Colors.red,
                 onPressed: () async {
                   final htmlText = await htmlEditorController.getText();
                   debugPrint('[DEBUG] HTML przed usunięciem: $htmlText');
-                  final updated = htmlText.replaceAllMapped(
-                    RegExp(r'<popup[^>]*id="(\d+)"[^>]*>(.*?)<\/popup>',
-                        caseSensitive: false),
-                    (match) {
-                      final tagId = match.group(1);
-                      final content = match.group(2)?.trim();
-                      debugPrint('[DEBUG] Match id: \$tagId');
-                      debugPrint('[DEBUG] Match content: \$content');
-                      if (content == clickedText.trim()) {
-                        return content!;
-                      }
-                      return match.group(0)!;
-                    },
+
+                  final contextPattern = RegExp(
+                    RegExp.escape(before) +
+                        RegExp.escape(outerHtml) +
+                        RegExp.escape(after),
+                    caseSensitive: false,
                   );
+
+                  final updated =
+                      htmlText.replaceFirstMapped(contextPattern, (match) {
+                    return before + clickedText + after;
+                  });
+
                   debugPrint('[DEBUG] HTML po usunięciu: $updated');
                   htmlEditorController.setText(updated);
                 },
@@ -312,8 +317,21 @@ class _NormalArticleEditPageState extends State<NormalArticleEditPage> {
       el.style.cursor = "pointer";
       el.onclick = function(e) {
         const content = el.innerText;
+        const outer = el.outerHTML;
+        const parent = el.parentNode;
+        const fullHtml = parent.innerHTML;
+        const position = fullHtml.indexOf(outer);
+        const before = fullHtml.substring(Math.max(0, position - 10), position);
+        const after = fullHtml.substring(position + outer.length, position + outer.length + 10);
+
         console.log('[JS] popup clicked:', content);
-        window.parent.postMessage({ type: 'popupClicked', value: content }, '*');
+        window.parent.postMessage({
+          type: 'popupClicked',
+          value: content,
+          outer: outer,
+          contextBefore: before,
+          contextAfter: after
+        }, '*');
       };
     });
   }, 500);
