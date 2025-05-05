@@ -19,7 +19,7 @@ class _GalerryListPageState extends State<GalerryListPage> {
   String searchQuery = '';
   int? selectedCategory;
 
-  static const _pageSize = 300;
+  static const _pageSize = 13000;
 
   final PagingController<int, Map<String, dynamic>> _pagingController =
       PagingController(firstPageKey: 0);
