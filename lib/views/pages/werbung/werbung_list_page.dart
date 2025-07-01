@@ -1,9 +1,9 @@
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/pages/werbung/add_edit_werbung_page.dart';
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/pages/werbung/add_edit_werbung_page.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
+import 'package:more_moda_admin/views/widgets/custom_button.dart';
 // Importujemy stronę dodawania/edytowania reklamy
 
 class WerbungListPage extends StatefulWidget {

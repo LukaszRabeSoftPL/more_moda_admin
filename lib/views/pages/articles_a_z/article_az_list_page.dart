@@ -1,9 +1,9 @@
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_add_page.dart';
-import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_edit_page.dart';
-import 'package:architect_schwarz_admin/views/widgets/add_subcategory_bauteile.dart';
-import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
-import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/pages/articles_a_z/article_az_add_page.dart';
+import 'package:more_moda_admin/views/pages/articles_a_z/article_az_edit_page.dart';
+import 'package:more_moda_admin/views/widgets/add_subcategory_bauteile.dart';
+import 'package:more_moda_admin/views/widgets/custom_button.dart';
+import 'package:more_moda_admin/views/widgets/popup_add.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

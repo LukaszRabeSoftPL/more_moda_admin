@@ -1,4 +1,4 @@
-import 'package:architect_schwarz_admin/main.dart';
+import 'package:more_moda_admin/main.dart';
 // Import the necessary package.
 
 //BAUTAILE CRUD

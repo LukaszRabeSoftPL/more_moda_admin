@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 Widget MainButton({
   required String text,
   required VoidCallback onPressed,
-  Color? color = const Color(0xFF6A93C3),
+  Color? color = const Color(0xFF273630),
   Color? textColor = Colors.white,
   double? width = 200,
   double? height = 50,

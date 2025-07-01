@@ -1,21 +1,22 @@
-import 'package:architect_schwarz_admin/controllers/articles_a_z_controller.dart';
-import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
-import 'package:architect_schwarz_admin/main.dart';
+import 'package:more_moda_admin/controllers/articles_a_z_controller.dart';
+import 'package:more_moda_admin/controllers/main_categories_controller.dart';
+import 'package:more_moda_admin/main.dart';
+import 'package:more_moda_admin/views/pages/orders_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_list_page.dart';
-import 'package:architect_schwarz_admin/views/pages/articles_normal/article_list_page.dart';
-import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
-import 'package:architect_schwarz_admin/views/pages/companies/companies_list_page.dart';
-import 'package:architect_schwarz_admin/views/pages/companies_page.dart';
-import 'package:architect_schwarz_admin/views/pages/gallery/add_galery_2.dart';
-import 'package:architect_schwarz_admin/views/pages/gallery/gallery_list_page.dart';
-import 'package:architect_schwarz_admin/views/pages/login_page.dart';
-import 'package:architect_schwarz_admin/views/pages/sub_subcategories/sub_subcategories_list_page.dart';
-import 'package:architect_schwarz_admin/views/pages/subcategories_page.dart';
-import 'package:architect_schwarz_admin/views/pages/werbung/werbung_list_page.dart'; // Import nowego ekranu
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/pages/articles_a_z/article_az_list_page.dart';
+import 'package:more_moda_admin/views/pages/articles_normal/article_list_page.dart';
+import 'package:more_moda_admin/views/pages/categories_page.dart';
+import 'package:more_moda_admin/views/pages/companies/companies_list_page.dart';
+import 'package:more_moda_admin/views/pages/companies_page.dart';
+import 'package:more_moda_admin/views/pages/gallery/add_galery_2.dart';
+import 'package:more_moda_admin/views/pages/gallery/gallery_list_page.dart';
+import 'package:more_moda_admin/views/pages/login_page.dart';
+import 'package:more_moda_admin/views/pages/sub_subcategories/sub_subcategories_list_page.dart';
+import 'package:more_moda_admin/views/pages/subcategories_page.dart';
+import 'package:more_moda_admin/views/pages/werbung/werbung_list_page.dart'; // Import nowego ekranu
 import 'package:fancy_button_flutter/fancy_button_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             width: 200,
-            color: Color(0xFF6A93C3),
+            color: Color(0xFF273630),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -51,39 +52,39 @@ class _HomePageState extends State<HomePage> {
                     ),
                     _buildMenuItem(
                       index: 0,
-                      icon: Icons.category,
-                      text: 'Hauptkategorien',
+                      icon: Icons.shopping_bag_outlined,
+                      text: 'Bestellungen',
                     ),
-                    _buildMenuItem(
-                      index: 1,
-                      icon: Icons.subdirectory_arrow_right,
-                      text: 'Unterkategorie',
-                    ),
-                    _buildMenuItem(
-                      index: 2,
-                      icon: Icons.article,
-                      text: 'Artikel A-Z',
-                    ),
-                    _buildMenuItem(
-                      index: 3,
-                      icon: Icons.article_outlined,
-                      text: 'Artikel',
-                    ),
-                    _buildMenuItem(
-                      index: 4,
-                      icon: Icons.photo_album,
-                      text: 'Galerien',
-                    ),
-                    _buildMenuItem(
-                      index: 6,
-                      icon: Icons.business,
-                      text: 'Firmen',
-                    ),
-                    _buildMenuItem(
-                      index: 7,
-                      icon: Icons.web,
-                      text: 'Werbung',
-                    ),
+                    // _buildMenuItem(
+                    //   index: 1,
+                    //   icon: Icons.subdirectory_arrow_right,
+                    //   text: 'Unterkategorie',
+                    // ),
+                    // _buildMenuItem(
+                    //   index: 2,
+                    //   icon: Icons.article,
+                    //   text: 'Artikel A-Z',
+                    // ),
+                    // _buildMenuItem(
+                    //   index: 3,
+                    //   icon: Icons.article_outlined,
+                    //   text: 'Artikel',
+                    // ),
+                    // _buildMenuItem(
+                    //   index: 4,
+                    //   icon: Icons.photo_album,
+                    //   text: 'Galerien',
+                    // ),
+                    // _buildMenuItem(
+                    //   index: 6,
+                    //   icon: Icons.business,
+                    //   text: 'Firmen',
+                    // ),
+                    // _buildMenuItem(
+                    //   index: 7,
+                    //   icon: Icons.web,
+                    //   text: 'Werbung',
+                    // ),
                   ],
                 ),
                 Padding(
@@ -98,7 +99,7 @@ class _HomePageState extends State<HomePage> {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            'version number: 1.18.0',
+                            'version: 1.00',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -140,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                 });
               },
               children: const [
-                CategoriesPage(),
+                OrdersPage(),
                 SubCategoriesPage(),
                 Article_AZ_ListPage(),
                 NormalArticleListPage(),
@@ -162,15 +163,15 @@ class _HomePageState extends State<HomePage> {
     required String text,
   }) {
     return Container(
-      color: _selectedIndex == index ? Color(0xFFF8EB98) : Colors.transparent,
+      color: _selectedIndex == index ? Color(0xFF83b89d) : Colors.transparent,
       child: ListTile(
         leading: Icon(icon,
-            color: _selectedIndex == index ? Color(0xFF838383) : Colors.white),
+            color: _selectedIndex == index ? Colors.black : Colors.white),
         title: Text(
           text,
           style: TextStyle(
             fontSize: 13,
-            color: _selectedIndex == index ? Color(0xFF838383) : Colors.white,
+            color: _selectedIndex == index ? Colors.black : Colors.white,
           ),
         ),
         onTap: () => _onItemTapped(index),

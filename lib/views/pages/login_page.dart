@@ -1,8 +1,8 @@
-import 'package:architect_schwarz_admin/main.dart';
-import 'package:architect_schwarz_admin/views/pages/home_page.dart';
-import 'package:architect_schwarz_admin/static/sizes_helpers.dart';
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/widgets/main_button.dart';
+import 'package:more_moda_admin/main.dart';
+import 'package:more_moda_admin/views/pages/home_page.dart';
+import 'package:more_moda_admin/static/sizes_helpers.dart';
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/widgets/main_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 1,
                 ),
               ),
-              color: Colors.white,
+              color: Color(0xFF3a4d45),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -59,25 +59,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Willkommen zurück',
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
                 SizedBox(height: 10),
-                Text('admin panel', style: TextStyle(fontSize: 16)),
+                Text(
+                  'admin panel',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
                 SizedBox(height: 50),
                 TextField(
-                  // key: Key('email-field'),
                   controller: _emailController,
-                  decoration: textFieldDecoration.copyWith(labelText: 'E-mail'),
+                  decoration: textFieldDecoration.copyWith(
+                    labelText: 'E-mail',
+                    floatingLabelStyle: TextStyle(color: Colors.white),
+                    labelStyle:
+                        TextStyle(color: Colors.white), // <-- biała etykieta
+                  ),
+                  style: TextStyle(
+                    color: Colors
+                        .white, // kolor tekstu wpisywanego przez użytkownika
+                  ),
                 ),
                 SizedBox(height: 20),
                 TextField(
                   // key: Key('password-field'),
                   controller: _passwordController,
                   obscureText: true,
-                  decoration:
-                      textFieldDecoration.copyWith(labelText: 'Passwort'),
+                  decoration: textFieldDecoration.copyWith(
+                    floatingLabelStyle: TextStyle(color: Colors.white),
+                    labelText: 'Passwort',
+                    labelStyle:
+                        TextStyle(color: Colors.white), // <-- biała etykieta
+                  ),
+                  style: TextStyle(
+                    color: Colors
+                        .white, // kolor tekstu wpisywanego przez użytkownika
+                  ),
                 ),
                 SizedBox(height: 20),
                 Container(
@@ -144,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: double.maxFinite,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/background_image.jpg'),
+                image: AssetImage('assets/images/back_more_moda.png'),
                 fit: BoxFit.cover,
               ),
             ),

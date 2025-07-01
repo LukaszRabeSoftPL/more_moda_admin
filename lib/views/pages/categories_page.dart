@@ -1,9 +1,9 @@
-import 'package:architect_schwarz_admin/controllers/main_categories_controller.dart';
-import 'package:architect_schwarz_admin/main.dart';
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
-import 'package:architect_schwarz_admin/views/widgets/main_button.dart';
-import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';
+import 'package:more_moda_admin/controllers/main_categories_controller.dart';
+import 'package:more_moda_admin/main.dart';
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/widgets/custom_button.dart';
+import 'package:more_moda_admin/views/widgets/main_button.dart';
+import 'package:more_moda_admin/views/widgets/popup_add.dart';
 import 'package:flutter/material.dart';
 import 'package:postgrest/src/types.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -46,7 +46,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             Padding(
               padding: const EdgeInsets.only(top: 8, left: 8),
               child: customButton(
-                text: 'Kategorie hinzufügen',
+                text: 'Kategorie hinzufügen2',
                 onPressed: () async {
                   showDialog(
                     context: context,

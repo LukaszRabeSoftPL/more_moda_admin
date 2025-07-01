@@ -1,4 +1,4 @@
-import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
+import 'package:more_moda_admin/views/widgets/custom_button.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

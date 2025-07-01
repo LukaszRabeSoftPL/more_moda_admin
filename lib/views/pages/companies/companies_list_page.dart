@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
-import 'package:architect_schwarz_admin/views/widgets/is_active_circle.dart';
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/widgets/custom_button.dart';
+import 'package:more_moda_admin/views/widgets/is_active_circle.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'add_company_page.dart';

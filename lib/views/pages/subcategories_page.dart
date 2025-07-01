@@ -1,11 +1,11 @@
-import 'package:architect_schwarz_admin/controllers/subcategories_controller.dart';
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/widgets/add_subcategory_baustoffe.dart';
-import 'package:architect_schwarz_admin/views/widgets/add_subcategory_bauteile.dart';
-import 'package:architect_schwarz_admin/views/widgets/add_subcategory_gestaltung.dart';
-import 'package:architect_schwarz_admin/views/widgets/add_subcategory_plannung.dart';
-import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
-import 'package:architect_schwarz_admin/views/widgets/popup_add.dart';
+import 'package:more_moda_admin/controllers/subcategories_controller.dart';
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/widgets/add_subcategory_baustoffe.dart';
+import 'package:more_moda_admin/views/widgets/add_subcategory_bauteile.dart';
+import 'package:more_moda_admin/views/widgets/add_subcategory_gestaltung.dart';
+import 'package:more_moda_admin/views/widgets/add_subcategory_plannung.dart';
+import 'package:more_moda_admin/views/widgets/custom_button.dart';
+import 'package:more_moda_admin/views/widgets/popup_add.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

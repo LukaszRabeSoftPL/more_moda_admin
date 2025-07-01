@@ -1,6 +1,6 @@
-import 'package:architect_schwarz_admin/main.dart';
-import 'package:architect_schwarz_admin/views/pages/home_page.dart';
-import 'package:architect_schwarz_admin/views/pages/login_page.dart';
+import 'package:more_moda_admin/main.dart';
+import 'package:more_moda_admin/views/pages/home_page.dart';
+import 'package:more_moda_admin/views/pages/login_page.dart';
 import 'package:flutter/material.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -29,7 +29,6 @@ class SplashPageState extends State<SplashPage> {
     );
   }
 }
-
 
 // class SplashPage extends StatelessWidget {
 //   Future<void> _redirect(BuildContext context) async {

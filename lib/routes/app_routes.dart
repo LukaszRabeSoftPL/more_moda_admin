@@ -1,6 +1,6 @@
-import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
-import 'package:architect_schwarz_admin/views/pages/home_page.dart';
-import 'package:architect_schwarz_admin/views/pages/login_page.dart';
+import 'package:more_moda_admin/views/pages/categories_page.dart';
+import 'package:more_moda_admin/views/pages/home_page.dart';
+import 'package:more_moda_admin/views/pages/login_page.dart';
 
 import 'package:get/get.dart';
 

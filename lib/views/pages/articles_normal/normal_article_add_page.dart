@@ -1,5 +1,5 @@
-import 'package:architect_schwarz_admin/views/pages/articles_a_z/article_az_add_page.dart';
-import 'package:architect_schwarz_admin/views/widgets/custom_button.dart';
+import 'package:more_moda_admin/views/pages/articles_a_z/article_az_add_page.dart';
+import 'package:more_moda_admin/views/widgets/custom_button.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';

@@ -1,10 +1,10 @@
-import 'package:architect_schwarz_admin/routes/app_routes.dart';
-import 'package:architect_schwarz_admin/static/static.dart';
-import 'package:architect_schwarz_admin/views/pages/categories_page.dart';
-import 'package:architect_schwarz_admin/views/pages/home_page.dart';
-import 'package:architect_schwarz_admin/views/pages/login_page.dart';
-import 'package:architect_schwarz_admin/views/pages/splash_page.dart';
-import 'package:architect_schwarz_admin/views/theme/theme.dart';
+import 'package:more_moda_admin/routes/app_routes.dart';
+import 'package:more_moda_admin/static/static.dart';
+import 'package:more_moda_admin/views/pages/categories_page.dart';
+import 'package:more_moda_admin/views/pages/home_page.dart';
+import 'package:more_moda_admin/views/pages/login_page.dart';
+import 'package:more_moda_admin/views/pages/splash_page.dart';
+import 'package:more_moda_admin/views/theme/theme.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
