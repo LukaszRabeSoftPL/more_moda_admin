@@ -36,7 +36,39 @@ class _OrdersPageState extends State<OrdersPage> {
     return response;
   }
 
-  Widget buildStatusIndicator(String status) {
+  Future<Map<String, dynamic>?> getSellerProfile(String sellerName) async {
+    final response = await client
+        .from('profiles')
+        .select(
+            'first_name, last_name, nick_name, email, street_name, house_number, postal_code, city, country, phone_number')
+        .eq('nick_name', sellerName)
+        .maybeSingle();
+
+    return response;
+  }
+
+  Widget buildProfileInfo(Map<String, dynamic> user, String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SelectableText('$title:',
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        SelectableText(
+            'Name: ${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'),
+        SelectableText('Nickname: ${user['nick_name'] ?? ''}'),
+        SelectableText('E-Mail: ${user['email'] ?? ''}'),
+        SelectableText('Telefon: ${user['phone_number'] ?? ''}'),
+        SelectableText(
+            'Adresse: ${user['street_name'] ?? ''} ${user['house_number'] ?? ''}'),
+        SelectableText(
+            'PLZ / Ort: ${user['postal_code'] ?? ''} ${user['city'] ?? ''}'),
+        SelectableText('Land: ${user['country'] ?? ''}'),
+      ],
+    );
+  }
+
+  Widget buildStatusIndicator() {
     return Row(
       children: [
         Container(
@@ -47,27 +79,6 @@ class _OrdersPageState extends State<OrdersPage> {
               BoxDecoration(color: Colors.green, shape: BoxShape.circle),
         ),
         const Text('Gekauft', style: TextStyle(color: Colors.green)),
-      ],
-    );
-  }
-
-  Widget buildBuyerInfo(Map<String, dynamic> user) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SelectableText('Käuferdaten:',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        SelectableText(
-            'Name: ${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'),
-        SelectableText('Nickname: ${user['nick_name'] ?? ''}'),
-        SelectableText('E-Mail: ${user['email'] ?? ''}'),
-        SelectableText(
-            'Adresse: ${user['street_name'] ?? ''} ${user['house_number'] ?? ''}'),
-        SelectableText(
-            'PLZ / Ort: ${user['postal_code'] ?? ''} ${user['city'] ?? ''}'),
-        SelectableText('Land: ${user['country'] ?? ''}'),
-        SelectableText('Telefon: ${user['phone_number'] ?? ''}'),
       ],
     );
   }
@@ -106,94 +117,120 @@ class _OrdersPageState extends State<OrdersPage> {
                 builder: (context, userSnapshot) {
                   final user = userSnapshot.data;
 
-                  return Card(
-                    color: cardColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0),
-                    ),
-                    margin: const EdgeInsets.all(8),
-                    child: ExpansionTile(
-                      leading: const Icon(Icons.shopping_cart_outlined),
-                      title: SelectableText(
-                        'Bestellung von: $sellerName',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SelectableText('Bestelldatum: $formattedDate'),
-                          buildStatusIndicator('BOUGHT'),
-                        ],
-                      ),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
+                  return FutureBuilder<Map<String, dynamic>?>(
+                    future: getSellerProfile(sellerName),
+                    builder: (context, sellerSnapshot) {
+                      final seller = sellerSnapshot.data;
+
+                      return Card(
+                        color: cardColor,
+                        margin: const EdgeInsets.all(8),
+                        child: ExpansionTile(
+                          leading: const Icon(Icons.shopping_cart_outlined),
+                          title: SelectableText(
+                            'Bestellung von: $sellerName'
+                            '${seller != null ? ' (${seller['first_name'] ?? ''} ${seller['last_name'] ?? ''})' : ''}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              /// LEWA — Produkty
-                              Expanded(
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: boughtHistory.map((item) {
-                                    final name = item['name'] ?? 'Kein Name';
-                                    final seller =
-                                        item['seller_name'] ?? 'Kein Verkäufer';
-                                    final category = item['category'] ?? '';
-                                    final subcategory =
-                                        item['subcategory'] ?? '';
-                                    final price = item['price'] ?? 0;
-
-                                    return Card(
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 4),
-                                      child: ListTile(
-                                        title: SelectableText(
-                                          'Artikel: $name',
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        subtitle: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            SelectableText(
-                                                'Verkäufer: $seller'),
-                                            SelectableText(
-                                                'Kategorie: $category / $subcategory'),
-                                            SelectableText(
-                                                'Preis: ${price.toStringAsFixed(2)} €'),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-
-                              const SizedBox(width: 16),
-
-                              /// PRAWA — Käuferdaten
-                              Expanded(
-                                flex: 1,
-                                child: Card(
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 4),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: user != null
-                                        ? buildBuyerInfo(user)
-                                        : const SelectableText(
-                                            'Lädt Käuferdaten...'),
-                                  ),
-                                ),
-                              ),
+                              SelectableText('Bestelldatum: $formattedDate'),
+                              buildStatusIndicator(),
                             ],
                           ),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      /// LEWA — Verkäuferdaten
+                                      Expanded(
+                                        flex: 1,
+                                        child: Card(
+                                          margin: const EdgeInsets.all(4),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: seller != null
+                                                ? buildProfileInfo(
+                                                    seller, 'Verkäuferdaten')
+                                                : const SelectableText(
+                                                    'Lädt Verkäuferdaten...'),
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(width: 8),
+
+                                      /// PRAWA — Käuferdaten
+                                      Expanded(
+                                        flex: 1,
+                                        child: Card(
+                                          margin: const EdgeInsets.all(4),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: user != null
+                                                ? buildProfileInfo(
+                                                    user, 'Käuferdaten')
+                                                : const SelectableText(
+                                                    'Lädt Käuferdaten...'),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  /// DÓŁ — Produkty
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: boughtHistory.map((item) {
+                                      final name = item['name'] ?? 'Kein Name';
+                                      final sellerItem = item['seller_name'] ??
+                                          'Kein Verkäufer';
+                                      final category = item['category'] ?? '';
+                                      final subcategory =
+                                          item['subcategory'] ?? '';
+                                      final price = item['price'] ?? 0;
+
+                                      return Card(
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 4),
+                                        child: ListTile(
+                                          title: SelectableText(
+                                            'Artikel: $name',
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              SelectableText(
+                                                  'Verkäufer: $sellerItem'),
+                                              SelectableText(
+                                                  'Kategorie: $category / $subcategory'),
+                                              SelectableText(
+                                                  'Preis: ${price.toStringAsFixed(2)} €'),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               );
